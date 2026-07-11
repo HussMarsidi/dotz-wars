@@ -1,0 +1,41 @@
+{
+	"$schema": "https://biomejs.dev/schemas/2.5.3/schema.json",
+	"files": {
+		"includes": ["**", "!**/node_modules", "!**/dist"]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "tab"
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"preset": "recommended"
+		}
+	},
+	"overrides": [
+		{
+			"includes": ["src/sim/**"],
+			"linter": {
+				"rules": {
+					"style": {
+						"noRestrictedImports": {
+							"level": "error",
+							"options": {
+								"paths": {
+									"pixi.js": "sim must stay pure — no PixiJS"
+								},
+								"patterns": [
+									{
+										"group": ["**/render/**", "**/net/**", "**/input/**"],
+										"message": "sim must not import render, net, or input"
+									}
+								]
+							}
+						}
+					}
+				}
+			}
+		}
+	]
+}
