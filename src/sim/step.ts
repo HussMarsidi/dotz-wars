@@ -21,6 +21,7 @@ import {
 } from "../territory";
 import type { OrderKind, Unit } from "../units";
 import { checkCityWinner, tickCapture } from "./capture";
+import { tickChase } from "./chase";
 import { tickCombat, tickProjectiles } from "./combat";
 import { findPath } from "./navigation";
 import { separateUnits } from "./separation";
@@ -208,10 +209,13 @@ export function step(
 		return state;
 	}
 
+	const chasedUnits = tickChase(state.units, map, radius, formations);
+	const chased: GameState = { ...state, units: chasedUnits };
+
 	const marched =
 		formations === undefined
-			? state
-			: tickFormationMarches(state, formations, map, radius, dt);
+			? chased
+			: tickFormationMarches(chased, formations, map, radius, dt);
 	const marchingIds =
 		formations === undefined ? new Set<string>() : formations.marchingUnitIds();
 

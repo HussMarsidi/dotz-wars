@@ -53,6 +53,38 @@ export function findClosestEnemy(
 	return best;
 }
 
+/**
+ * Living enemy within `range`, preferring lowest HP ratio then closest.
+ * Used for both auto-attack and chase targeting.
+ */
+export function findPriorityEnemy(
+	attacker: Unit,
+	units: readonly Unit[],
+	range: number,
+): Unit | null {
+	let best: Unit | null = null;
+	let bestHpRatio = Number.POSITIVE_INFINITY;
+	let bestDist = Number.POSITIVE_INFINITY;
+	const rangeSq = range * range;
+
+	for (const other of units) {
+		if (!other.isAlive || other.teamId === attacker.teamId) {
+			continue;
+		}
+		const dist = distanceSquared(attacker.position, other.position);
+		if (dist > rangeSq) {
+			continue;
+		}
+		const hpRatio = other.hp / other.maxHp;
+		if (hpRatio < bestHpRatio || (hpRatio === bestHpRatio && dist < bestDist)) {
+			best = other;
+			bestHpRatio = hpRatio;
+			bestDist = dist;
+		}
+	}
+	return best;
+}
+
 export type CombatTickResult = {
 	readonly units: readonly Unit[];
 	readonly projectiles: readonly Projectile[];
@@ -83,10 +115,9 @@ function applyDamageEvents(
 }
 
 /**
- * Auto-attack closest enemy in range.
+ * Auto-attack priority enemy in range (lowest HP ratio, then closest).
  * Melee applies damage immediately; ranged spawns a flying projectile.
- *
- * NOTE: if the enemy leaves range we hold — no chase / attack-move yet.
+ * Chase / support movement is handled by `tickChase`.
  */
 export function tickCombat(
 	units: readonly Unit[],
@@ -109,7 +140,7 @@ export function tickCombat(
 			return decayCombatAnims(unit, dt).copy({ attackTimer: timer });
 		}
 
-		const enemy = findClosestEnemy(unit, living, unit.attackRange);
+		const enemy = findPriorityEnemy(unit, living, unit.attackRange);
 		if (enemy === null) {
 			return decayCombatAnims(unit, dt).copy({ attackTimer: 0 });
 		}

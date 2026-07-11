@@ -65,6 +65,12 @@ export const SELECTION_RING_WIDTH = 2;
 export const PROJECTILE_COLOR = 0xfff59d;
 export const PROJECTILE_RADIUS = 4;
 
+/**
+ * Auto-chase / support radius = attackRange * this.
+ * Enemies inside aggro interrupt orders and pull units into the fight.
+ */
+export const AGGRO_RANGE_MULTIPLIER = 2;
+
 /** Brief melee lunge / slash window (seconds). */
 export const ATTACK_ANIM_DURATION = 0.22;
 /** How far a melee unit lunges toward the target (world units). */
