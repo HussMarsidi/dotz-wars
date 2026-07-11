@@ -57,9 +57,6 @@ export function issueMoveOrder(
 	if (!hasSelection(state)) {
 		return state;
 	}
-	if (!circleFitsOnLand(map, destination, radius)) {
-		return state;
-	}
 
 	return {
 		...state,
@@ -71,8 +68,9 @@ export function issueMoveOrder(
 			if (path === null || path.length === 0) {
 				return unit;
 			}
+			const last = path[path.length - 1] ?? destination;
 			return unit.copy({
-				target: destination,
+				target: last,
 				path,
 				orderKind,
 				orderAge: 0,

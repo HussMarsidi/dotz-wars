@@ -125,16 +125,19 @@ export function issueFormationMove(
 	if (centroid === null) {
 		return state;
 	}
-	if (!circleFitsOnLand(map, destination, radius)) {
+
+	const path = findPath(map, centroid, destination, radius);
+	if (path === null || path.length === 0) {
 		return state;
 	}
+	const resolvedDestination = path[path.length - 1] ?? destination;
 
 	const resolvedFacing =
 		facing !== undefined
 			? normalizeFacing(facing)
 			: normalizeFacing({
-					x: destination.x - centroid.x,
-					y: destination.y - centroid.y,
+					x: resolvedDestination.x - centroid.x,
+					y: resolvedDestination.y - centroid.y,
 				});
 
 	registry.updateFacing(formation.id, resolvedFacing);
@@ -148,8 +151,8 @@ export function issueFormationMove(
 	);
 
 	const dist = Math.hypot(
-		destination.x - centroid.x,
-		destination.y - centroid.y,
+		resolvedDestination.x - centroid.x,
+		resolvedDestination.y - centroid.y,
 	);
 	if (dist <= PATH_WAYPOINT_REACH) {
 		registry.setMarch(formation.id, null);
@@ -160,21 +163,16 @@ export function issueFormationMove(
 				formation.shape,
 				formation.memberIds.length,
 				formation.spacing,
-				destination,
+				resolvedDestination,
 				resolvedFacing,
 			),
 			null,
 		);
 	}
 
-	const path = findPath(map, centroid, destination, radius);
-	if (path === null || path.length === 0) {
-		return state;
-	}
-
 	const march: FormationMarch = {
 		anchor: centroid,
-		target: destination,
+		target: resolvedDestination,
 		path,
 		facing: resolvedFacing,
 	};
@@ -184,7 +182,7 @@ export function issueFormationMove(
 		state,
 		formation.memberIds,
 		startSlots,
-		destination,
+		resolvedDestination,
 	);
 }
 

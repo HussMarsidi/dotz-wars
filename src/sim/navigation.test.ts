@@ -68,7 +68,7 @@ describe("findPath", () => {
 		expect(last?.y).toBeCloseTo(goal.y, 0);
 	});
 
-	it("returns null when the goal is in water", () => {
+	it("snaps a water goal to nearby land instead of failing", () => {
 		const path = findPath(
 			map,
 			{ x: 40, y: 160 },
@@ -76,7 +76,20 @@ describe("findPath", () => {
 			RADIUS,
 			20,
 		);
-		expect(path).toBeNull();
+		expect(path).not.toBeNull();
+		if (path === null) {
+			return;
+		}
+		const last = path[path.length - 1];
+		expect(last).toBeDefined();
+		if (last === undefined) {
+			return;
+		}
+		// Snapped inland — not the water center, and clear of the ellipse.
+		expect(Math.hypot(last.x - 200, last.y - 60)).toBeGreaterThan(20);
+		const nx = (last.x - 200) / 30;
+		const ny = (last.y - 60) / 70;
+		expect(nx * nx + ny * ny).toBeGreaterThan(1);
 	});
 });
 

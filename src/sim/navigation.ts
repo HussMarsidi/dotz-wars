@@ -1,6 +1,11 @@
 import { circleFitsOnLand, terrainSpeedMultiplier } from "../map/terrain";
 import type { MapDefinition } from "../map/types";
-import { PATH_GRID_CELL, TERRAIN_SPEED_MULTIPLIER } from "../shared/config";
+import {
+	PATH_GRID_CELL,
+	PATH_LAND_SNAP_BUFFER,
+	PATH_LAND_SNAP_MAX,
+	TERRAIN_SPEED_MULTIPLIER,
+} from "../shared/config";
 import type { Vec2 } from "../shared/types";
 
 type GridPos = {
@@ -128,8 +133,54 @@ export function simplifyPath(
 }
 
 /**
+ * Nearest point where the unit circle fits on land with a small water buffer.
+ * Used when start/goal sit on or too close to water so movement can continue.
+ */
+function snapToLand(
+	map: MapDefinition,
+	point: Vec2,
+	radius: number,
+): Vec2 | null {
+	const clearance = radius + PATH_LAND_SNAP_BUFFER;
+	if (circleFitsOnLand(map, point, clearance)) {
+		return point;
+	}
+
+	for (let r = 2; r <= PATH_LAND_SNAP_MAX; r += 2) {
+		const samples = Math.max(8, Math.ceil((Math.PI * 2 * r) / 4));
+		for (let i = 0; i < samples; i++) {
+			const angle = (i / samples) * Math.PI * 2;
+			const candidate = {
+				x: point.x + Math.cos(angle) * r,
+				y: point.y + Math.sin(angle) * r,
+			};
+			if (circleFitsOnLand(map, candidate, clearance)) {
+				return candidate;
+			}
+		}
+	}
+
+	// Fall back to any walkable spot without buffer if buffer search failed.
+	for (let r = 2; r <= PATH_LAND_SNAP_MAX; r += 2) {
+		const samples = Math.max(8, Math.ceil((Math.PI * 2 * r) / 4));
+		for (let i = 0; i < samples; i++) {
+			const angle = (i / samples) * Math.PI * 2;
+			const candidate = {
+				x: point.x + Math.cos(angle) * r,
+				y: point.y + Math.sin(angle) * r,
+			};
+			if (circleFitsOnLand(map, candidate, radius)) {
+				return candidate;
+			}
+		}
+	}
+	return null;
+}
+
+/**
  * Grid A* from `start` to `goal`, avoiding water (circle must fit on land).
  * Returns waypoints including `goal` (not `start`), or `null` if unreachable.
+ * Start/goal on or against water are snapped a few pixels inland instead of failing.
  */
 export function findPath(
 	map: MapDefinition,
@@ -138,12 +189,26 @@ export function findPath(
 	radius: number,
 	cellSize: number = PATH_GRID_CELL,
 ): Vec2[] | null {
-	if (!circleFitsOnLand(map, start, radius)) {
+	const snappedStart = circleFitsOnLand(map, start, radius)
+		? start
+		: snapToLand(map, start, radius);
+	if (snappedStart === null) {
 		return null;
 	}
-	if (!circleFitsOnLand(map, goal, radius)) {
+
+	const snappedGoal = circleFitsOnLand(
+		map,
+		goal,
+		radius + PATH_LAND_SNAP_BUFFER,
+	)
+		? goal
+		: snapToLand(map, goal, radius);
+	if (snappedGoal === null) {
 		return null;
 	}
+
+	start = snappedStart;
+	goal = snappedGoal;
 
 	if (segmentClear(map, start, goal, radius)) {
 		return [goal];

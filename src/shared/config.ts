@@ -36,6 +36,12 @@ export const CLICK_DRAG_THRESHOLD = 4;
 /** Pathfinding grid cell size (world units). Smaller = tighter paths, more CPU. */
 export const PATH_GRID_CELL = 24;
 
+/** Extra clearance from water when snapping start/goal onto land. */
+export const PATH_LAND_SNAP_BUFFER = 6;
+
+/** Max search radius (world units) when snapping a point onto land. */
+export const PATH_LAND_SNAP_MAX = 64;
+
 /** How close a unit must get to a waypoint before advancing (world units). */
 export const PATH_WAYPOINT_REACH = 10;
 
