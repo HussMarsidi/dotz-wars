@@ -22,8 +22,10 @@ export type Dot = {
 	readonly selected: boolean;
 	/** World units per second. Per-dot so classes can differ later. */
 	readonly speed: number;
-	/** RTS move destination; null when idle. */
+	/** Final RTS destination; null when idle. Used for move arrow. */
 	readonly target: Vec2 | null;
+	/** Remaining waypoints to `target` (may be empty when idle). */
+	readonly path: readonly Vec2[];
 };
 
 export type GameState = {

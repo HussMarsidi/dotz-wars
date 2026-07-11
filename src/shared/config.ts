@@ -30,6 +30,12 @@ export const DOT_RADIUS = 12;
 /** Pointer travel below this (world units) counts as a click, not a marquee. */
 export const CLICK_DRAG_THRESHOLD = 4;
 
+/** Pathfinding grid cell size (world units). Smaller = tighter paths, more CPU. */
+export const PATH_GRID_CELL = 24;
+
+/** How close a dot must get to a waypoint before advancing (world units). */
+export const PATH_WAYPOINT_REACH = 10;
+
 /** Camera zoom limits / wheel factor. Tune these for feel. */
 /** Hard floor — also never zoom out past fitting the whole map in view. */
 export const CAMERA_ZOOM_MIN = 0.35;

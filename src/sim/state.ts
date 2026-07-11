@@ -8,6 +8,7 @@ export function createInitialDots(): Dot[] {
 		selected: false,
 		speed: DOT_SPEED,
 		target: null,
+		path: [],
 	}));
 }
 

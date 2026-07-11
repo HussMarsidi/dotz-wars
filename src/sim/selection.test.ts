@@ -17,6 +17,7 @@ function dot(id: string, x: number, y: number, selected = false): Dot {
 		selected,
 		speed: 180,
 		target: null,
+		path: [],
 	};
 }
 
@@ -109,6 +110,7 @@ describe("applyMarqueeSelection", () => {
 			selected: true,
 			speed: 180,
 			target: null,
+			path: [],
 		});
 		expect(next.dots[1]).toEqual({
 			id: "b",
@@ -116,6 +118,7 @@ describe("applyMarqueeSelection", () => {
 			selected: false,
 			speed: 180,
 			target: null,
+			path: [],
 		});
 	});
 });

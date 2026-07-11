@@ -26,6 +26,21 @@ const map: MapDefinition = {
 	],
 };
 
+const aroundWater: MapDefinition = {
+	id: "around",
+	width: 400,
+	height: 200,
+	regions: [
+		{
+			terrain: "water",
+			shape: "ellipse",
+			center: { x: 200, y: 60 },
+			radiusX: 30,
+			radiusY: 70,
+		},
+	],
+};
+
 const RADIUS = 10;
 
 function makeDot(partial: Partial<Dot> & Pick<Dot, "id" | "position">): Dot {
@@ -33,6 +48,7 @@ function makeDot(partial: Partial<Dot> & Pick<Dot, "id" | "position">): Dot {
 		selected: false,
 		speed: DOT_SPEED,
 		target: null,
+		path: [],
 		...partial,
 	};
 }
@@ -42,13 +58,14 @@ function stateOf(...dots: Dot[]): GameState {
 }
 
 describe("issueMoveOrder", () => {
-	it("sets target on selected dots when destination is land", () => {
+	it("sets target and path on selected dots when destination is land", () => {
 		const state = stateOf(
 			makeDot({ id: "a", position: { x: 50, y: 50 }, selected: true }),
 			makeDot({ id: "b", position: { x: 60, y: 60 }, selected: false }),
 		);
 		const next = issueMoveOrder(state, { x: 80, y: 50 }, map, RADIUS);
 		expect(next.dots[0]?.target).toEqual({ x: 80, y: 50 });
+		expect(next.dots[0]?.path.length).toBeGreaterThan(0);
 		expect(next.dots[1]?.target).toBeNull();
 	});
 
@@ -58,6 +75,16 @@ describe("issueMoveOrder", () => {
 		);
 		const next = issueMoveOrder(state, { x: 150, y: 100 }, map, RADIUS);
 		expect(next.dots[0]?.target).toBeNull();
+		expect(next.dots[0]?.path).toEqual([]);
+	});
+
+	it("paths around water instead of a straight line through it", () => {
+		const state = stateOf(
+			makeDot({ id: "a", position: { x: 80, y: 40 }, selected: true }),
+		);
+		const next = issueMoveOrder(state, { x: 320, y: 40 }, aroundWater, 8);
+		expect(next.dots[0]?.target).toEqual({ x: 320, y: 40 });
+		expect(next.dots[0]?.path.length).toBeGreaterThan(1);
 	});
 
 	it("no-ops when nothing selected", () => {
@@ -70,13 +97,14 @@ describe("issueMoveOrder", () => {
 });
 
 describe("step", () => {
-	it("moves toward target at speed * dt on land", () => {
+	it("moves toward the next waypoint at speed * dt on land", () => {
 		const state = stateOf(
 			makeDot({
 				id: "a",
 				position: { x: 90, y: 20 },
 				speed: 100,
 				target: { x: 190, y: 20 },
+				path: [{ x: 190, y: 20 }],
 			}),
 		);
 		const next = step(state, map, RADIUS, 0.1);
@@ -92,50 +120,65 @@ describe("step", () => {
 				position: { x: 40, y: 50 },
 				speed: 100,
 				target: { x: 100, y: 50 },
+				path: [{ x: 100, y: 50 }],
 			}),
 		);
 		const next = step(state, map, RADIUS, 0.1);
-		// 100 * 0.7 * 0.1 = 7
 		expect(next.dots[0]?.position.x).toBeCloseTo(47);
 	});
 
-	it("clears target on arrival", () => {
+	it("clears target and path on arrival", () => {
 		const state = stateOf(
 			makeDot({
 				id: "a",
 				position: { x: 50, y: 20 },
 				speed: 100,
 				target: { x: 55, y: 20 },
+				path: [{ x: 55, y: 20 }],
 			}),
 		);
 		const next = step(state, map, RADIUS, 0.1);
 		expect(next.dots[0]?.position).toEqual({ x: 55, y: 20 });
 		expect(next.dots[0]?.target).toBeNull();
+		expect(next.dots[0]?.path).toEqual([]);
 	});
 
-	it("stops at water edge and clears target", () => {
+	it("advances through waypoints", () => {
 		const state = stateOf(
 			makeDot({
 				id: "a",
-				position: { x: 80, y: 100 },
-				speed: 200,
-				target: { x: 150, y: 100 },
+				position: { x: 50, y: 20 },
+				speed: 100,
+				target: { x: 80, y: 20 },
+				path: [
+					{ x: 55, y: 20 },
+					{ x: 80, y: 20 },
+				],
 			}),
 		);
-		const next = step(state, map, RADIUS, 1);
-		expect(next.dots[0]?.target).toBeNull();
-		expect(next.dots[0]?.position.x).toBeLessThan(150 - 40);
-		expect(next.dots[0]?.position.x).toBeGreaterThan(80);
+		const next = step(state, map, RADIUS, 0.1);
+		expect(next.dots[0]?.path).toEqual([{ x: 80, y: 20 }]);
+		expect(next.dots[0]?.target).toEqual({ x: 80, y: 20 });
 	});
 });
 
 describe("interpolateState", () => {
 	it("blends positions between ticks", () => {
 		const previous = stateOf(
-			makeDot({ id: "a", position: { x: 0, y: 0 }, target: { x: 10, y: 0 } }),
+			makeDot({
+				id: "a",
+				position: { x: 0, y: 0 },
+				target: { x: 10, y: 0 },
+				path: [{ x: 10, y: 0 }],
+			}),
 		);
 		const current = stateOf(
-			makeDot({ id: "a", position: { x: 10, y: 0 }, target: { x: 10, y: 0 } }),
+			makeDot({
+				id: "a",
+				position: { x: 10, y: 0 },
+				target: { x: 10, y: 0 },
+				path: [{ x: 10, y: 0 }],
+			}),
 		);
 		const mid = interpolateState(previous, current, 0.5);
 		expect(mid.dots[0]?.position.x).toBeCloseTo(5);
