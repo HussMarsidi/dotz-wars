@@ -100,6 +100,20 @@ export const RED_SPAWN_X = 1980;
 export const SPAWN_Y_START = 400;
 export const SPAWN_Y_GAP = 100;
 
+/** Per-shape slot spacing (world units). */
+export const FORMATION_SPACING_BY_SHAPE = {
+	line: 44,
+	wedge: 48,
+	column: 36,
+	box: 40,
+} as const;
+/** @deprecated Prefer FORMATION_SPACING_BY_SHAPE / spacingForShape. */
+export const FORMATION_SPACING = FORMATION_SPACING_BY_SHAPE.line;
+export const FORMATION_PREVIEW_COLOR = 0xfff59d;
+export const FORMATION_PREVIEW_ALPHA = 0.85;
+export const FORMATION_FACING_COLOR = 0xffffff;
+export const FORMATION_BADGE_COLOR = 0x80cbc4;
+
 /** City body square side length (world units). */
 export const CITY_SIZE = 48;
 /** Half-extent of the always-visible capture box around a city. */

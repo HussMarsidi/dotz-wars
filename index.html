@@ -56,11 +56,73 @@
 				border-color: rgba(79, 195, 247, 0.55);
 				color: #fff;
 			}
+			.formation-menu {
+				position: absolute;
+				top: 64px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 3;
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				padding: 10px 12px;
+				border-radius: 8px;
+				background: rgba(20, 24, 18, 0.9);
+				border: 1px solid rgba(255, 255, 255, 0.14);
+				backdrop-filter: blur(6px);
+				color: #e8efe4;
+				min-width: 280px;
+			}
+			.formation-menu[hidden] {
+				display: none;
+			}
+			.formation-menu__title {
+				font-size: 12px;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				opacity: 0.75;
+			}
+			.formation-menu__status {
+				font-size: 13px;
+				font-weight: 600;
+				color: #fff59d;
+			}
+			.formation-menu__row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+			}
+			.formation-menu button {
+				appearance: none;
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 6px;
+				padding: 7px 12px;
+				background: rgba(255, 255, 255, 0.04);
+				color: #e8efe4;
+				font: inherit;
+				font-size: 13px;
+				cursor: pointer;
+			}
+			.formation-menu button:hover:not(:disabled) {
+				background: rgba(255, 255, 255, 0.1);
+			}
+			.formation-menu button:disabled {
+				opacity: 0.35;
+				cursor: not-allowed;
+			}
+			.formation-menu button.is-active {
+				background: rgba(128, 203, 196, 0.28);
+				border-color: rgba(128, 203, 196, 0.7);
+				color: #fff;
+			}
 			#app[data-pointer-mode="pan"] canvas {
 				cursor: grab;
 			}
 			#app[data-pointer-mode="pan"] canvas:active {
 				cursor: grabbing;
+			}
+			#app[data-formation-facing="1"] canvas {
+				cursor: crosshair;
 			}
 		</style>
 	</head>

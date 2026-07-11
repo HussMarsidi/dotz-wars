@@ -1,4 +1,6 @@
 import type { City } from "../cities";
+import type { FormationRegistry } from "../formation";
+import { tickFormationMarches } from "../formation";
 import {
 	circleFitsOnLand,
 	lastWalkableOnSegment,
@@ -202,26 +204,50 @@ export function step(
 	map: MapDefinition,
 	radius: number,
 	dt: number,
+	formations?: FormationRegistry,
 ): GameState {
 	if (state.winner !== null) {
 		return state;
 	}
 
-	const moved = state.units.map((unit) => {
+	const marched =
+		formations === undefined
+			? state
+			: tickFormationMarches(state, formations, map, radius, dt);
+	const marchingIds =
+		formations === undefined ? new Set<string>() : formations.marchingUnitIds();
+
+	const moved = marched.units.map((unit) => {
+		if (marchingIds.has(unit.id)) {
+			const aged =
+				unit.target === null
+					? unit
+					: unit.copy({ orderAge: unit.orderAge + dt });
+			return aged;
+		}
 		const next = advanceUnit(unit, map, radius, dt);
 		if (next.target === null) {
 			return next;
 		}
 		return next.copy({ orderAge: next.orderAge + dt });
 	});
-	const separated = separateUnits(moved, map, radius);
 
-	const combat = tickCombat(separated, state.projectiles, dt, nextProjectileId);
+	const freeUnits = moved.filter((unit) => !marchingIds.has(unit.id));
+	const lockedUnits = moved.filter((unit) => marchingIds.has(unit.id));
+	const separatedFree = separateUnits(freeUnits, map, radius);
+	const separated = [...separatedFree, ...lockedUnits];
+
+	const combat = tickCombat(
+		separated,
+		marched.projectiles,
+		dt,
+		nextProjectileId,
+	);
 	nextProjectileId = combat.nextProjectileId;
 
 	const flights = tickProjectiles(combat.units, combat.projectiles, dt);
 	const afterCombat = removeDead(flights.units);
-	const cities = tickCapture(state.cities, afterCombat, dt);
+	const cities = tickCapture(marched.cities, afterCombat, dt);
 	const sourcesForDrain = collectSources(cities, afterCombat);
 	const drained = applyTerritoryDrain(afterCombat, sourcesForDrain, dt);
 	const living = removeDead(drained);

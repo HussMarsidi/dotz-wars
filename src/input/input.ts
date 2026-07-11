@@ -3,12 +3,19 @@ import type { Rect, Vec2 } from "../shared/types";
 
 export type PointerMode = "select" | "pan";
 
+/** Extra gesture layer on top of select/pan (e.g. formation facing drag). */
+export type PointerGesture = "normal" | "formationFacing";
+
 export type PointerHandlers = {
 	readonly onClick: (position: Vec2) => void;
 	readonly onMarquee: (rect: Rect) => void;
 	readonly onMarqueeEnd: (rect: Rect) => void;
 	readonly onPan: (screenDelta: Vec2) => void;
 	readonly onZoom: (screenPoint: Vec2, factor: number) => void;
+	readonly onFormationFacingStart?: (anchor: Vec2) => void;
+	readonly onFormationFacingMove?: (anchor: Vec2, current: Vec2) => void;
+	readonly onFormationFacingEnd?: (anchor: Vec2, current: Vec2) => void;
+	readonly onFormationFacingCancel?: () => void;
 };
 
 type PointerState = {
@@ -51,6 +58,7 @@ export type PointerInputOptions = {
 	readonly canvas: HTMLCanvasElement;
 	readonly camera: Camera;
 	readonly getMode: () => PointerMode;
+	readonly getGesture?: () => PointerGesture;
 	readonly clickThresholdWorld: number;
 	readonly zoomWheelFactor: number;
 	readonly handlers: PointerHandlers;
@@ -58,13 +66,14 @@ export type PointerInputOptions = {
 
 /**
  * Pointer → select (click/marquee) or pan, plus wheel zoom.
- * World positions come from the camera; pan deltas are screen CSS pixels.
+ * Optional formation-facing gesture: hold-drag from anchor to set facing.
  */
 export function attachPointerInput(options: PointerInputOptions): () => void {
 	const {
 		canvas,
 		camera,
 		getMode,
+		getGesture = () => "normal" as const,
 		clickThresholdWorld,
 		zoomWheelFactor,
 		handlers,
@@ -90,6 +99,10 @@ export function attachPointerInput(options: PointerInputOptions): () => void {
 			dragging: false,
 		};
 		canvas.setPointerCapture(event.pointerId);
+
+		if (getGesture() === "formationFacing") {
+			handlers.onFormationFacingStart?.(originWorld);
+		}
 	};
 
 	const onPointerMove = (event: PointerEvent) => {
@@ -105,6 +118,12 @@ export function attachPointerInput(options: PointerInputOptions): () => void {
 		const prevScreen = pointer.currentScreen;
 		pointer.currentScreen = currentScreen;
 		pointer.currentWorld = currentWorld;
+
+		if (getGesture() === "formationFacing") {
+			pointer.dragging = true;
+			handlers.onFormationFacingMove?.(pointer.originWorld, currentWorld);
+			return;
+		}
 
 		if (getMode() === "pan") {
 			if (!pointer.dragging) {
@@ -143,6 +162,11 @@ export function attachPointerInput(options: PointerInputOptions): () => void {
 		const originWorld = pointer.originWorld;
 		pointer = null;
 
+		if (getGesture() === "formationFacing") {
+			handlers.onFormationFacingEnd?.(originWorld, currentWorld);
+			return;
+		}
+
 		if (getMode() === "pan") {
 			return;
 		}
@@ -152,6 +176,12 @@ export function attachPointerInput(options: PointerInputOptions): () => void {
 			return;
 		}
 		handlers.onClick(originWorld);
+	};
+
+	const onKeyDown = (event: KeyboardEvent) => {
+		if (event.key === "Escape" && getGesture() === "formationFacing") {
+			handlers.onFormationFacingCancel?.();
+		}
 	};
 
 	const onWheel = (event: WheelEvent) => {
@@ -166,6 +196,7 @@ export function attachPointerInput(options: PointerInputOptions): () => void {
 	canvas.addEventListener("pointerup", endPointer);
 	canvas.addEventListener("pointercancel", endPointer);
 	canvas.addEventListener("wheel", onWheel, { passive: false });
+	window.addEventListener("keydown", onKeyDown);
 
 	return () => {
 		canvas.removeEventListener("pointerdown", onPointerDown);
@@ -173,5 +204,6 @@ export function attachPointerInput(options: PointerInputOptions): () => void {
 		canvas.removeEventListener("pointerup", endPointer);
 		canvas.removeEventListener("pointercancel", endPointer);
 		canvas.removeEventListener("wheel", onWheel);
+		window.removeEventListener("keydown", onKeyDown);
 	};
 }

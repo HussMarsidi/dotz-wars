@@ -22,6 +22,10 @@ import type { DotId, Rect, Vec2 } from "../shared/types";
 import type { Unit } from "../units";
 import { type CityView, createCityView, syncCityView } from "./city-view";
 import { createDotView, type DotView, syncDotView } from "./dot-view";
+import {
+	drawFormationPreview,
+	type FormationPreview,
+} from "./formation-preview";
 import { createMapView } from "./map-view";
 import { drawTerritory } from "./territory-view";
 
@@ -48,6 +52,7 @@ export class Renderer {
 	private readonly dotsLayer: Container;
 	private readonly projectileGfx: Graphics;
 	private readonly arrowGfx: Graphics;
+	private readonly formationPreviewGfx: Graphics;
 	private readonly marqueeGfx: Graphics;
 	private readonly cityViews = new Map<CityId, CityView>();
 	private readonly dotViews = new Map<DotId, DotView>();
@@ -66,6 +71,7 @@ export class Renderer {
 		this.dotsLayer = new Container();
 		this.projectileGfx = new Graphics();
 		this.arrowGfx = new Graphics();
+		this.formationPreviewGfx = new Graphics();
 		this.marqueeGfx = new Graphics();
 		this.world.addChild(this.mapLayer);
 		this.world.addChild(this.territoryGfx);
@@ -73,6 +79,7 @@ export class Renderer {
 		this.world.addChild(this.dotsLayer);
 		this.world.addChild(this.projectileGfx);
 		this.world.addChild(this.arrowGfx);
+		this.world.addChild(this.formationPreviewGfx);
 		this.world.addChild(this.marqueeGfx);
 		app.stage.addChild(this.world);
 
@@ -115,12 +122,19 @@ export class Renderer {
 		state: GameState,
 		marquee: MarqueeView,
 		groupLabels?: ReadonlyMap<DotId, string>,
+		formationPreview: FormationPreview | null = null,
+		formationLabels?: ReadonlyMap<DotId, string>,
 	): void {
 		drawTerritory(this.territoryGfx, state.territory);
 		this.syncCities(state);
-		this.syncDots(state, groupLabels ?? EMPTY_GROUP_LABELS);
+		this.syncDots(
+			state,
+			groupLabels ?? EMPTY_GROUP_LABELS,
+			formationLabels ?? EMPTY_GROUP_LABELS,
+		);
 		this.drawProjectiles(state);
 		this.drawMoveArrows(state);
+		drawFormationPreview(this.formationPreviewGfx, formationPreview);
 		this.drawMarquee(marquee);
 	}
 
@@ -151,20 +165,22 @@ export class Renderer {
 	private syncDots(
 		state: GameState,
 		groupLabels: ReadonlyMap<DotId, string>,
+		formationLabels: ReadonlyMap<DotId, string>,
 	): void {
 		const seen = new Set<DotId>();
 
 		for (const unit of state.units) {
 			seen.add(unit.id);
 			const groupLabel = groupLabels.get(unit.id) ?? "";
+			const formationLabel = formationLabels.get(unit.id) ?? "";
 			let view = this.dotViews.get(unit.id);
 			if (view === undefined) {
 				view = createDotView(unit);
 				this.dotViews.set(unit.id, view);
 				this.dotsLayer.addChild(view.root);
-				syncDotView(view, unit, groupLabel);
+				syncDotView(view, unit, groupLabel, formationLabel);
 			} else {
-				syncDotView(view, unit, groupLabel);
+				syncDotView(view, unit, groupLabel, formationLabel);
 			}
 		}
 

@@ -4,6 +4,7 @@
  *
  * Control groups (1–9): digit alone selects; Cmd/Ctrl+digit assigns.
  * Cmd/Ctrl+A: select all units of the same type(s) as the current selection.
+ * Cmd/Ctrl+D: open formation menu; Cmd/Ctrl+Shift+D: break; Cmd/Ctrl+F: face.
  */
 
 export type ShortcutAction = "setSelectMode" | "setPanMode" | "clearSelection";
@@ -31,6 +32,9 @@ export type ControlGroupShortcutHandlers = {
 
 export type ExtraShortcutHandlers = {
 	readonly selectAllSameType: () => void;
+	readonly openFormationMenu?: () => void;
+	readonly breakFormation?: () => void;
+	readonly faceFormation?: () => void;
 };
 
 function isEditableTarget(target: EventTarget | null): boolean {
@@ -79,6 +83,33 @@ export function attachShortcuts(
 			} else {
 				controlGroups.selectGroup(slot);
 			}
+			return;
+		}
+
+		if (
+			extra !== undefined &&
+			(event.metaKey || event.ctrlKey) &&
+			!event.altKey &&
+			event.key.toLowerCase() === "d"
+		) {
+			event.preventDefault();
+			if (event.shiftKey) {
+				extra.breakFormation?.();
+			} else {
+				extra.openFormationMenu?.();
+			}
+			return;
+		}
+
+		if (
+			extra !== undefined &&
+			(event.metaKey || event.ctrlKey) &&
+			!event.altKey &&
+			!event.shiftKey &&
+			event.key.toLowerCase() === "f"
+		) {
+			event.preventDefault();
+			extra.faceFormation?.();
 			return;
 		}
 

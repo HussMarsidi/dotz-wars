@@ -2,6 +2,7 @@ import { Container, Graphics, Text } from "pixi.js";
 import {
 	ATTACK_ANIM_DURATION,
 	DOT_RADIUS,
+	FORMATION_BADGE_COLOR,
 	HIT_FLASH_DURATION,
 	HP_BAR_BG,
 	HP_BAR_HEIGHT,
@@ -34,6 +35,7 @@ export type DotView = {
 	readonly hpBar: Graphics;
 	readonly label: Text;
 	readonly groupBadge: Text;
+	readonly formationBadge: Text;
 };
 
 /** Maps a sim unit → a view container. Render-only; never mutates sim. */
@@ -66,17 +68,36 @@ export function createDotView(unit: Unit): DotView {
 	});
 	groupBadge.anchor.set(0.5, 1);
 	groupBadge.visible = false;
+	const formationBadge = new Text({
+		text: "",
+		style: {
+			fontFamily: "ui-sans-serif, system-ui, sans-serif",
+			fontSize: 9,
+			fontWeight: "700",
+			fill: FORMATION_BADGE_COLOR,
+			align: "right",
+			stroke: { color: 0x000000, width: 2 },
+		},
+	});
+	formationBadge.anchor.set(0.5, 1);
+	formationBadge.visible = false;
 	root.addChild(body);
 	root.addChild(fx);
 	root.addChild(hpBar);
 	root.addChild(label);
 	root.addChild(groupBadge);
-	const view = { root, body, fx, hpBar, label, groupBadge };
+	root.addChild(formationBadge);
+	const view = { root, body, fx, hpBar, label, groupBadge, formationBadge };
 	syncDotView(view, unit);
 	return view;
 }
 
-export function syncDotView(view: DotView, unit: Unit, groupLabel = ""): void {
+export function syncDotView(
+	view: DotView,
+	unit: Unit,
+	groupLabel = "",
+	formationLabel = "",
+): void {
 	const fill =
 		unit.hitFlash > 0
 			? mixColor(
@@ -112,7 +133,6 @@ export function syncDotView(view: DotView, unit: Unit, groupLabel = ""): void {
 	if (groupLabel.length > 0) {
 		view.groupBadge.text = groupLabel;
 		view.groupBadge.visible = true;
-		// Top-left of the dot body.
 		view.groupBadge.position.set(
 			lunge.x - DOT_RADIUS + 2,
 			lunge.y - DOT_RADIUS + 1,
@@ -120,6 +140,18 @@ export function syncDotView(view: DotView, unit: Unit, groupLabel = ""): void {
 	} else {
 		view.groupBadge.text = "";
 		view.groupBadge.visible = false;
+	}
+
+	if (formationLabel.length > 0) {
+		view.formationBadge.text = formationLabel;
+		view.formationBadge.visible = true;
+		view.formationBadge.position.set(
+			lunge.x + DOT_RADIUS - 2,
+			lunge.y - DOT_RADIUS + 1,
+		);
+	} else {
+		view.formationBadge.text = "";
+		view.formationBadge.visible = false;
 	}
 
 	view.root.position.set(unit.position.x, unit.position.y);
