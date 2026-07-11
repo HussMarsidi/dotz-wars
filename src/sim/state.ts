@@ -1,4 +1,5 @@
 import { createInitialCities } from "../cities";
+import { createInitialGold } from "../money";
 import {
 	BLUE_SPAWN_X,
 	BOARD_HEIGHT,
@@ -41,6 +42,7 @@ export function createInitialState(): GameState {
 			collectSources(cities, units),
 		),
 		projectiles: [],
+		gold: createInitialGold(),
 		winner: null,
 	};
 }

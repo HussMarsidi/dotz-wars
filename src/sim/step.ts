@@ -261,6 +261,7 @@ export function step(
 		cities,
 		territory,
 		projectiles: flights.projectiles,
+		gold: marched.gold,
 		winner,
 	};
 }
@@ -280,6 +281,7 @@ export function interpolateState(
 		winner: current.winner,
 		cities: current.cities,
 		territory: current.territory,
+		gold: current.gold,
 		units: current.units.map((unit) => {
 			const prev = prevById.get(unit.id);
 			if (prev === undefined) {
