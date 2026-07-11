@@ -41,6 +41,7 @@ export class Renderer {
 		this.canvas = app.canvas;
 		this.map = map;
 		this.camera = new Camera();
+		this.camera.setWorldSize(map.width, map.height);
 
 		this.world = new Container();
 		this.mapLayer = createMapView(map);
@@ -59,8 +60,12 @@ export class Renderer {
 			app.screen.width,
 			app.screen.height,
 		);
-		this.world.position.set(this.camera.x, this.camera.y);
-		this.world.scale.set(this.camera.zoom);
+		this.applyCamera();
+
+		app.renderer.on("resize", () => {
+			this.camera.setViewSize(app.screen.width, app.screen.height);
+			this.applyCamera();
+		});
 	}
 
 	static async create(
