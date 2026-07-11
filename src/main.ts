@@ -49,6 +49,7 @@ import {
 	step,
 } from "./sim/step";
 import { mountFormationMenu } from "./ui/formation-menu";
+import { mountGoldHud } from "./ui/gold-hud";
 import { mountToolbar } from "./ui/toolbar";
 
 type FacingDraft = {
@@ -128,6 +129,7 @@ async function main(): Promise<void> {
 			formationPreview,
 			formations.labelsByUnit(),
 		);
+		goldHud.sync(viewState.gold);
 		if (gesture !== "formationFacing") {
 			syncFormationHud();
 		}
@@ -245,6 +247,8 @@ async function main(): Promise<void> {
 		onModeChange: setMode,
 		onClearSelection: deselectAll,
 	});
+
+	const goldHud = mountGoldHud(host);
 
 	const formationMenu = mountFormationMenu(host, {
 		onPickShape: (shape) => {

@@ -1,4 +1,4 @@
-import type { Vec2 } from "./types";
+import type { TeamId, Vec2 } from "./types";
 
 /** World size — larger than a typical viewport; pan/zoom to explore. */
 export const BOARD_WIDTH = 2400;
@@ -119,6 +119,12 @@ export const FORMATION_PREVIEW_COLOR = 0xfff59d;
 export const FORMATION_PREVIEW_ALPHA = 0.85;
 export const FORMATION_FACING_COLOR = 0xffffff;
 export const FORMATION_BADGE_COLOR = 0x80cbc4;
+
+/** Local human player — buys/selects cities for this team only. */
+export const LOCAL_TEAM: TeamId = "blue";
+
+/** Starting gold per team. Income generation is out of scope for now. */
+export const STARTING_GOLD = 1000;
 
 /** City body square side length (world units). */
 export const CITY_SIZE = 48;

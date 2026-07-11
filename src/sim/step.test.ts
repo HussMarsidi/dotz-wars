@@ -61,6 +61,7 @@ function stateOf(...units: Unit[]): GameState {
 		cities: [],
 		territory: emptyTerritory(1, 1),
 		projectiles: [],
+		gold: { blue: 1000, red: 1000 },
 		winner: null,
 	};
 }
