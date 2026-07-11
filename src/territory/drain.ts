@@ -1,20 +1,19 @@
 import { TERRITORY_DRAIN_HP_PER_SEC } from "../shared/config";
 import type { Unit } from "../units";
-import { isEnemyGround } from "./field";
-import type { TerritoryField } from "./types";
+import { overwhelmAt } from "./field";
+import type { InfluenceSource } from "./types";
 
 /**
- * Flat HP drain on enemy-owned ground.
- * Own ground and neutral are safe. A unit's own projection counts toward ownership,
- * so a blob can flip the ground under itself and stop bleeding.
+ * HP drain when enemy influence fully covers the unit's at its feet.
+ * Rate scales with overwhelm: shallow fringe = slow bleed; deep = fast.
+ * Own / neutral ground (overwhelm 0) is safe. Blobs raise own influence and can stop the drain.
  */
 export function applyTerritoryDrain(
 	units: readonly Unit[],
-	field: TerritoryField,
+	sources: readonly InfluenceSource[],
 	dt: number,
 ): readonly Unit[] {
-	const loss = TERRITORY_DRAIN_HP_PER_SEC * dt;
-	if (loss <= 0) {
+	if (dt <= 0) {
 		return units;
 	}
 
@@ -22,9 +21,11 @@ export function applyTerritoryDrain(
 		if (!unit.isAlive) {
 			return unit;
 		}
-		if (!isEnemyGround(field, unit.position, unit.teamId)) {
+		const overwhelm = overwhelmAt(sources, unit.position, unit.teamId);
+		if (overwhelm <= 0) {
 			return unit;
 		}
+		const loss = TERRITORY_DRAIN_HP_PER_SEC * overwhelm * dt;
 		return unit.copy({ hp: Math.max(0, unit.hp - loss) });
 	});
 }

@@ -121,16 +121,21 @@ export const TERRITORY_CELL = 16;
 /** Same strength for all cities in Phase 2 — per-city sizes come later. */
 export const CITY_INFLUENCE_STRENGTH = 100;
 export const CITY_INFLUENCE_RADIUS = 320;
-export const UNIT_INFLUENCE_STRENGTH = 28;
-export const UNIT_INFLUENCE_RADIUS = 100;
-/** |blue - red| below this → neutral (no HP drain in Phase 3). */
+/** Small local bump — units nudge the fringe, not paint large blobs alone. */
+export const UNIT_INFLUENCE_STRENGTH = 14;
+export const UNIT_INFLUENCE_RADIUS = 42;
+/** |blue - red| below this → neutral (no HP drain). */
 export const TERRITORY_NEUTRAL_EPSILON = 1;
 export const TERRITORY_TINT_ALPHA = 0.2;
 export const TERRITORY_BORDER_COLOR = 0xffffff;
 export const TERRITORY_BORDER_ALPHA = 0.75;
 export const TERRITORY_BORDER_WIDTH = 2;
-/** Flat HP lost per second while standing on enemy-owned ground (neutral is safe). */
-export const TERRITORY_DRAIN_HP_PER_SEC = 14;
+/**
+ * Max HP lost per second when fully overwhelmed on enemy ground.
+ * Actual drain = this * overwhelm, where overwhelm = (enemy - own) / enemy
+ * (0 at the seam, → 1 deep where own influence is tiny).
+ */
+export const TERRITORY_DRAIN_HP_PER_SEC = 22;
 
 /** @deprecated Prefer TEAM_COLORS + selection ring. Kept only if something still imports it. */
 export const DOT_COLOR = TEAM_COLORS.blue;

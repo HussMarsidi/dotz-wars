@@ -73,6 +73,20 @@ export function emptyTerritory(
 	return computeTerritory(width, height, [], cellSize);
 }
 
+export function teamInfluenceAt(
+	sources: readonly InfluenceSource[],
+	point: Vec2,
+	teamId: TeamId,
+): number {
+	let sum = 0;
+	for (const source of sources) {
+		if (source.teamId === teamId) {
+			sum += influenceAt(source, point);
+		}
+	}
+	return sum;
+}
+
 export function ownerAt(field: TerritoryField, point: Vec2): TerritoryOwner {
 	const col = Math.floor(point.x / field.cellSize);
 	const row = Math.floor(point.y / field.cellSize);
@@ -92,4 +106,24 @@ export function isEnemyGround(
 		return false;
 	}
 	return owner !== teamId;
+}
+
+/**
+ * How hard enemy influence covers this team's at `point`.
+ * 0 = own/neutral (safe); → 1 deep in enemy space where own influence is tiny.
+ */
+export function overwhelmAt(
+	sources: readonly InfluenceSource[],
+	point: Vec2,
+	teamId: TeamId,
+): number {
+	const own = teamInfluenceAt(sources, point, teamId);
+	const enemyTeam: TeamId = teamId === "blue" ? "red" : "blue";
+	const enemy = teamInfluenceAt(sources, point, enemyTeam);
+
+	// Enemy must fully cover (own more than us) before drain starts.
+	if (enemy <= own + TERRITORY_NEUTRAL_EPSILON) {
+		return 0;
+	}
+	return (enemy - own) / enemy;
 }

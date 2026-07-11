@@ -4,7 +4,9 @@ export {
 	emptyTerritory,
 	influenceAt,
 	isEnemyGround,
+	overwhelmAt,
 	ownerAt,
+	teamInfluenceAt,
 } from "./field";
 export { cityAsSource, collectSources, unitAsSource } from "./sources";
 export type {

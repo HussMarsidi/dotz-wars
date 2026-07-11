@@ -222,12 +222,8 @@ export function step(
 	const flights = tickProjectiles(combat.units, combat.projectiles, dt);
 	const afterCombat = removeDead(flights.units);
 	const cities = tickCapture(state.cities, afterCombat, dt);
-	const fieldForDrain = computeTerritory(
-		BOARD_WIDTH,
-		BOARD_HEIGHT,
-		collectSources(cities, afterCombat),
-	);
-	const drained = applyTerritoryDrain(afterCombat, fieldForDrain, dt);
+	const sourcesForDrain = collectSources(cities, afterCombat);
+	const drained = applyTerritoryDrain(afterCombat, sourcesForDrain, dt);
 	const living = removeDead(drained);
 	const territory = computeTerritory(
 		BOARD_WIDTH,
