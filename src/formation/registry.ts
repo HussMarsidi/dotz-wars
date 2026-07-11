@@ -190,7 +190,11 @@ export function createFormationRegistry(): FormationRegistry {
 				if (formation.march === null) {
 					continue;
 				}
+				const detached = new Set(formation.march.detachedIds);
 				for (const memberId of formation.memberIds) {
+					if (detached.has(memberId)) {
+						continue;
+					}
 					ids.add(memberId);
 				}
 			}

@@ -104,9 +104,34 @@ export function formationSlots(
 	anchor: Vec2,
 	facing: Vec2,
 ): Vec2[] {
+	const locals = localOffsets(shape, count, spacing);
+	return slotsFromLocalOffsets(locals, anchor, facing);
+}
+
+/** Convert a world point into formation-local offset ( +x right, +y forward ). */
+export function worldToLocalOffset(
+	point: Vec2,
+	anchor: Vec2,
+	facing: Vec2,
+): Vec2 {
 	const forward = normalizeFacing(facing);
 	const right = facingRight(forward);
-	const locals = localOffsets(shape, count, spacing);
+	const dx = point.x - anchor.x;
+	const dy = point.y - anchor.y;
+	return {
+		x: dx * right.x + dy * right.y,
+		y: dx * forward.x + dy * forward.y,
+	};
+}
+
+/** World positions from formation-local offsets. */
+export function slotsFromLocalOffsets(
+	locals: readonly Vec2[],
+	anchor: Vec2,
+	facing: Vec2,
+): Vec2[] {
+	const forward = normalizeFacing(facing);
+	const right = facingRight(forward);
 	return locals.map((local) => ({
 		x: anchor.x + right.x * local.x + forward.x * local.y,
 		y: anchor.y + right.y * local.x + forward.y * local.y,

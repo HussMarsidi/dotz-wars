@@ -227,6 +227,7 @@ async function main(): Promise<void> {
 			map,
 			DOT_RADIUS,
 			updated.facing,
+			{ assemble: true },
 		);
 		redraw();
 	};
@@ -514,6 +515,7 @@ async function main(): Promise<void> {
 							map,
 							DOT_RADIUS,
 							facing,
+							{ assemble: true },
 						);
 					}
 					redraw();
@@ -531,6 +533,7 @@ async function main(): Promise<void> {
 					map,
 					DOT_RADIUS,
 					facing,
+					{ assemble: true },
 				);
 				redraw();
 			},

@@ -17,6 +17,22 @@ const openMap: MapDefinition = {
 	regions: [],
 };
 
+/** Vertical water strip — a wide line will clip it while the centroid stays on land. */
+const waterStripMap: MapDefinition = {
+	id: "water-strip",
+	width: 800,
+	height: 800,
+	regions: [
+		{
+			terrain: "water",
+			shape: "ellipse",
+			center: { x: 400, y: 200 },
+			radiusX: 40,
+			radiusY: 120,
+		},
+	],
+};
+
 function stateOf(...units: GameState["units"]): GameState {
 	return {
 		units,
@@ -54,6 +70,7 @@ describe("tickFormationMarches", () => {
 			openMap,
 			10,
 			{ x: 1, y: 0 },
+			{ assemble: true },
 		);
 
 		const before = state.units.map((u) => u.position);
@@ -80,5 +97,85 @@ describe("tickFormationMarches", () => {
 		const midAfter =
 			((t?.position.x ?? 0) + (s?.position.x ?? 0) + (g?.position.x ?? 0)) / 3;
 		expect(midAfter - midBefore).toBeCloseTo(tank.speed, 0);
+	});
+
+	it("does not snap positions when issuing a normal move", () => {
+		const registry = createFormationRegistry();
+		const a = Grunt.spawn("a", "blue", { x: 100, y: 105 });
+		const b = Grunt.spawn("b", "blue", { x: 140, y: 98 });
+		const c = Grunt.spawn("c", "blue", { x: 175, y: 102 });
+		let state = stateOf(a, b, c);
+		const formation = registry.create("line", ["a", "b", "c"], { x: 1, y: 0 });
+
+		state = issueFormationMove(
+			state,
+			registry,
+			formation,
+			{ x: 500, y: 100 },
+			openMap,
+			10,
+			{ x: 1, y: 0 },
+		);
+
+		expect(state.units.find((u) => u.id === "a")?.position).toEqual({
+			x: 100,
+			y: 105,
+		});
+		expect(state.units.find((u) => u.id === "b")?.position).toEqual({
+			x: 140,
+			y: 98,
+		});
+		expect(state.units.find((u) => u.id === "c")?.position).toEqual({
+			x: 175,
+			y: 102,
+		});
+	});
+
+	it("peels water-blocked members while the rest keep marching", () => {
+		const registry = createFormationRegistry();
+		// Already in a line spread on Y so a wing clips water without assemble-snap.
+		const ids = ["a", "b", "c", "d", "e"] as const;
+		const units = ids.map((id, i) =>
+			Grunt.spawn(id, "blue", { x: 320, y: 20 + i * 40 }),
+		);
+		let state = stateOf(...units);
+		const formation = registry.create("line", [...ids], { x: 1, y: 0 }, 40);
+
+		state = issueFormationMove(
+			state,
+			registry,
+			formation,
+			{ x: 600, y: 100 },
+			waterStripMap,
+			10,
+			{ x: 1, y: 0 },
+		);
+
+		// March until someone peels (slot hits water) or we give up.
+		let peeled = false;
+		for (let i = 0; i < 40; i++) {
+			state = tickFormationMarches(state, registry, waterStripMap, 10, 0.25);
+			const current = registry.get(formation.id);
+			if ((current?.march?.detachedIds.length ?? 0) > 0) {
+				peeled = true;
+				break;
+			}
+		}
+		expect(peeled).toBe(true);
+
+		const march = registry.get(formation.id)?.march;
+		expect(march).not.toBeNull();
+		// Formation still marching (not frozen by water).
+		expect(march?.path.length ?? 0).toBeGreaterThan(0);
+
+		const detached = new Set(march?.detachedIds ?? []);
+		const marching = registry.marchingUnitIds();
+		for (const id of detached) {
+			expect(marching.has(id)).toBe(false);
+			const unit = state.units.find((u) => u.id === id);
+			expect(unit?.path.length ?? 0).toBeGreaterThan(0);
+		}
+		// At least one member still locked in the march.
+		expect([...ids].some((id) => marching.has(id))).toBe(true);
 	});
 });

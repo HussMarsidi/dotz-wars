@@ -12,6 +12,16 @@ export type FormationMarch = {
 	/** Remaining waypoints for the anchor (includes final target). */
 	readonly path: readonly Vec2[];
 	readonly facing: Vec2;
+	/**
+	 * Members temporarily free to path around blocked terrain (still in roster).
+	 * They chase their moving slot and rejoin when it is walkable again.
+	 */
+	readonly detachedIds: readonly DotId[];
+	/**
+	 * Per-member local offsets from the anchor (+x right, +y forward), parallel
+	 * to `Formation.memberIds`. Captured at march start so units do not snap.
+	 */
+	readonly memberOffsets: readonly Vec2[];
 };
 
 export type Formation = {
