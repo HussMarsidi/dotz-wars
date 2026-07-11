@@ -7,6 +7,9 @@ export const BOARD_HEIGHT = 600;
 /** Dot collision / selection radius. */
 export const DOT_RADIUS = 12;
 
+/** Pointer travel below this (world units) counts as a click, not a marquee. */
+export const CLICK_DRAG_THRESHOLD = 4;
+
 export const DOT_COLOR = 0x4fc3f7;
 export const DOT_SELECTED_COLOR = 0xffeb3b;
 

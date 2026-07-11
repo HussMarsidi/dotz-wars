@@ -7,6 +7,21 @@ type NormalizedRect = {
 	readonly bottom: number;
 };
 
+function distanceSquared(a: Vec2, b: Vec2): number {
+	const dx = a.x - b.x;
+	const dy = a.y - b.y;
+	return dx * dx + dy * dy;
+}
+
+/** Point inside / on the circle edge. */
+export function pointHitsCircle(
+	point: Vec2,
+	center: Vec2,
+	radius: number,
+): boolean {
+	return distanceSquared(point, center) <= radius * radius;
+}
+
 function normalizeRect(rect: Rect): NormalizedRect | null {
 	const left = Math.min(rect.x, rect.x + rect.width);
 	const right = Math.max(rect.x, rect.x + rect.width);
@@ -63,17 +78,52 @@ export function selectDotsInRect(
 	return selected;
 }
 
-/** Apply marquee selection flags. Positions unchanged (ready for later movement). */
-export function applyMarqueeSelection(
+function withSelection(
 	state: GameState,
-	rect: Rect,
-	radius: number,
+	selectedIds: ReadonlySet<DotId>,
 ): GameState {
-	const selectedIds = selectDotsInRect(state.dots, rect, radius);
 	return {
 		dots: state.dots.map((dot) => ({
 			...dot,
 			selected: selectedIds.has(dot.id),
 		})),
 	};
+}
+
+/** Apply marquee selection flags. Positions unchanged (ready for later movement). */
+export function applyMarqueeSelection(
+	state: GameState,
+	rect: Rect,
+	radius: number,
+): GameState {
+	return withSelection(state, selectDotsInRect(state.dots, rect, radius));
+}
+
+/**
+ * Click: select the closest hit circle, or clear if the point misses every dot.
+ * Positions unchanged.
+ */
+export function applyClickSelection(
+	state: GameState,
+	point: Vec2,
+	radius: number,
+): GameState {
+	let bestId: DotId | null = null;
+	let bestDist = Number.POSITIVE_INFINITY;
+
+	for (const dot of state.dots) {
+		if (!pointHitsCircle(point, dot.position, radius)) {
+			continue;
+		}
+		const dist = distanceSquared(point, dot.position);
+		if (dist < bestDist) {
+			bestDist = dist;
+			bestId = dot.id;
+		}
+	}
+
+	if (bestId === null) {
+		return withSelection(state, new Set());
+	}
+	return withSelection(state, new Set([bestId]));
 }

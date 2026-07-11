@@ -28,5 +28,6 @@ export type GameState = {
 
 /** Plain input payloads produced by the input layer. */
 export type Input =
+	| { readonly type: "click"; readonly position: Vec2 }
 	| { readonly type: "marquee"; readonly rect: Rect }
 	| { readonly type: "marqueeEnd"; readonly rect: Rect };

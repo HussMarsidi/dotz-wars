@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import type { Dot, Rect } from "../shared/types";
 import {
+	applyClickSelection,
 	applyMarqueeSelection,
 	circleOverlapsRect,
+	pointHitsCircle,
 	selectDotsInRect,
 } from "./selection";
 
@@ -105,5 +107,47 @@ describe("applyMarqueeSelection", () => {
 			position: { x: 200, y: 200 },
 			selected: false,
 		});
+	});
+});
+
+describe("pointHitsCircle", () => {
+	it("hits center and edge; misses outside", () => {
+		expect(pointHitsCircle({ x: 50, y: 50 }, { x: 50, y: 50 }, RADIUS)).toBe(
+			true,
+		);
+		expect(pointHitsCircle({ x: 60, y: 50 }, { x: 50, y: 50 }, RADIUS)).toBe(
+			true,
+		);
+		expect(pointHitsCircle({ x: 60.1, y: 50 }, { x: 50, y: 50 }, RADIUS)).toBe(
+			false,
+		);
+	});
+});
+
+describe("applyClickSelection", () => {
+	it("selects the clicked dot", () => {
+		const state = {
+			dots: [dot("a", 50, 50), dot("b", 200, 200, true)],
+		};
+		const next = applyClickSelection(state, { x: 55, y: 50 }, RADIUS);
+		expect(next.dots[0]?.selected).toBe(true);
+		expect(next.dots[1]?.selected).toBe(false);
+	});
+
+	it("clears selection when clicking empty space", () => {
+		const state = {
+			dots: [dot("a", 50, 50, true)],
+		};
+		const next = applyClickSelection(state, { x: 0, y: 0 }, RADIUS);
+		expect(next.dots[0]?.selected).toBe(false);
+	});
+
+	it("picks the closest overlapping circle", () => {
+		const state = {
+			dots: [dot("far", 50, 50), dot("near", 55, 50)],
+		};
+		const next = applyClickSelection(state, { x: 58, y: 50 }, RADIUS);
+		expect(next.dots[0]?.selected).toBe(false);
+		expect(next.dots[1]?.selected).toBe(true);
 	});
 });
