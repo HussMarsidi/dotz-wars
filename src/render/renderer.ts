@@ -23,6 +23,7 @@ import type { Unit } from "../units";
 import { type CityView, createCityView, syncCityView } from "./city-view";
 import { createDotView, type DotView, syncDotView } from "./dot-view";
 import { createMapView } from "./map-view";
+import { drawTerritory } from "./territory-view";
 
 export type MarqueeView = Rect | null;
 
@@ -40,6 +41,7 @@ export class Renderer {
 
 	private readonly world: Container;
 	private readonly mapLayer: Graphics;
+	private readonly territoryGfx: Graphics;
 	private readonly citiesLayer: Container;
 	private readonly dotsLayer: Container;
 	private readonly projectileGfx: Graphics;
@@ -57,12 +59,14 @@ export class Renderer {
 
 		this.world = new Container();
 		this.mapLayer = createMapView(map);
+		this.territoryGfx = new Graphics();
 		this.citiesLayer = new Container();
 		this.dotsLayer = new Container();
 		this.projectileGfx = new Graphics();
 		this.arrowGfx = new Graphics();
 		this.marqueeGfx = new Graphics();
 		this.world.addChild(this.mapLayer);
+		this.world.addChild(this.territoryGfx);
 		this.world.addChild(this.citiesLayer);
 		this.world.addChild(this.dotsLayer);
 		this.world.addChild(this.projectileGfx);
@@ -106,6 +110,7 @@ export class Renderer {
 	}
 
 	sync(state: GameState, marquee: MarqueeView): void {
+		drawTerritory(this.territoryGfx, state.territory);
 		this.syncCities(state);
 		this.syncDots(state);
 		this.drawProjectiles(state);

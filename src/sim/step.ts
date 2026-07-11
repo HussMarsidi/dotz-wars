@@ -5,9 +5,14 @@ import {
 	terrainSpeedMultiplier,
 } from "../map/terrain";
 import type { MapDefinition } from "../map/types";
-import { PATH_WAYPOINT_REACH } from "../shared/config";
+import {
+	BOARD_HEIGHT,
+	BOARD_WIDTH,
+	PATH_WAYPOINT_REACH,
+} from "../shared/config";
 import type { GameState } from "../shared/game-state";
 import type { TeamId, Vec2 } from "../shared/types";
+import { collectSources, computeTerritory } from "../territory";
 import type { OrderKind, Unit } from "../units";
 import { checkCityWinner, tickCapture } from "./capture";
 import { tickCombat, tickProjectiles } from "./combat";
@@ -213,11 +218,17 @@ export function step(
 	const flights = tickProjectiles(combat.units, combat.projectiles, dt);
 	const living = removeDead(flights.units);
 	const cities = tickCapture(state.cities, living, dt);
+	const territory = computeTerritory(
+		BOARD_WIDTH,
+		BOARD_HEIGHT,
+		collectSources(cities, living),
+	);
 	const winner = checkWinner(cities);
 
 	return {
 		units: living,
 		cities,
+		territory,
 		projectiles: flights.projectiles,
 		winner,
 	};
@@ -237,6 +248,7 @@ export function interpolateState(
 	return {
 		winner: current.winner,
 		cities: current.cities,
+		territory: current.territory,
 		units: current.units.map((unit) => {
 			const prev = prevById.get(unit.id);
 			if (prev === undefined) {

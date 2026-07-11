@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameState } from "../shared/game-state";
 import type { Rect } from "../shared/types";
+import { emptyTerritory } from "../territory";
 import type { Unit } from "../units";
 import { Grunt } from "../units";
 import {
@@ -23,7 +24,13 @@ function rect(x: number, y: number, width: number, height: number): Rect {
 }
 
 function stateOf(...units: Unit[]): GameState {
-	return { units, cities: [], projectiles: [], winner: null };
+	return {
+		units,
+		cities: [],
+		territory: emptyTerritory(1, 1),
+		projectiles: [],
+		winner: null,
+	};
 }
 
 describe("circleOverlapsRect", () => {

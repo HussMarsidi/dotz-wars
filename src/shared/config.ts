@@ -113,6 +113,23 @@ export const CITY_CAPTURE_PROGRESS_COLOR = 0xffeb3b;
 export const CITY_CAPTURE_PROGRESS_WIDTH = 3;
 export const CITY_LABEL_COLOR = 0xffffff;
 
+/**
+ * Territory influence knobs.
+ * Ownership at a point = whoever has more projected influence; near-ties are neutral.
+ */
+export const TERRITORY_CELL = 16;
+/** Same strength for all cities in Phase 2 — per-city sizes come later. */
+export const CITY_INFLUENCE_STRENGTH = 100;
+export const CITY_INFLUENCE_RADIUS = 320;
+export const UNIT_INFLUENCE_STRENGTH = 28;
+export const UNIT_INFLUENCE_RADIUS = 100;
+/** |blue - red| below this → neutral (no HP drain in Phase 3). */
+export const TERRITORY_NEUTRAL_EPSILON = 1;
+export const TERRITORY_TINT_ALPHA = 0.2;
+export const TERRITORY_BORDER_COLOR = 0xffffff;
+export const TERRITORY_BORDER_ALPHA = 0.75;
+export const TERRITORY_BORDER_WIDTH = 2;
+
 /** @deprecated Prefer TEAM_COLORS + selection ring. Kept only if something still imports it. */
 export const DOT_COLOR = TEAM_COLORS.blue;
 export const DOT_SELECTED_COLOR = 0xffeb3b;

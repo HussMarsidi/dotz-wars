@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createCity } from "../cities";
 import type { MapDefinition } from "../map/types";
 import type { GameState } from "../shared/game-state";
+import { emptyTerritory } from "../territory";
 import type { Unit } from "../units";
 import { Archer, Grunt } from "../units";
 import { findClosestEnemy, tickCombat, tickProjectiles } from "./combat";
@@ -55,7 +56,13 @@ const openMap: MapDefinition = {
 const RADIUS = 10;
 
 function stateOf(...units: Unit[]): GameState {
-	return { units, cities: [], projectiles: [], winner: null };
+	return {
+		units,
+		cities: [],
+		territory: emptyTerritory(1, 1),
+		projectiles: [],
+		winner: null,
+	};
 }
 
 describe("issueMoveOrder", () => {

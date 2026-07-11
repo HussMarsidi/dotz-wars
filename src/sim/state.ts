@@ -1,11 +1,14 @@
 import { createInitialCities } from "../cities";
 import {
 	BLUE_SPAWN_X,
+	BOARD_HEIGHT,
+	BOARD_WIDTH,
 	RED_SPAWN_X,
 	SPAWN_Y_GAP,
 	SPAWN_Y_START,
 } from "../shared/config";
 import type { GameState } from "../shared/game-state";
+import { collectSources, computeTerritory } from "../territory";
 import { spawnUnit, type TeamId, UNIT_LINEUP, type Unit } from "../units";
 
 function spawnTeam(teamId: TeamId, spawnX: number): Unit[] {
@@ -27,9 +30,16 @@ export function createInitialUnits(): Unit[] {
 }
 
 export function createInitialState(): GameState {
+	const units = createInitialUnits();
+	const cities = createInitialCities();
 	return {
-		units: createInitialUnits(),
-		cities: createInitialCities(),
+		units,
+		cities,
+		territory: computeTerritory(
+			BOARD_WIDTH,
+			BOARD_HEIGHT,
+			collectSources(cities, units),
+		),
 		projectiles: [],
 		winner: null,
 	};
