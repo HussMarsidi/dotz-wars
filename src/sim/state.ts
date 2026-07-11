@@ -1,4 +1,4 @@
-import { INITIAL_DOT_POSITIONS } from "../shared/config";
+import { DOT_SPEED, INITIAL_DOT_POSITIONS } from "../shared/config";
 import type { Dot, GameState } from "../shared/types";
 
 export function createInitialDots(): Dot[] {
@@ -6,6 +6,8 @@ export function createInitialDots(): Dot[] {
 		id: `dot-${index}`,
 		position,
 		selected: false,
+		speed: DOT_SPEED,
+		target: null,
 	}));
 }
 

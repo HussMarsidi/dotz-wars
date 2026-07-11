@@ -11,7 +11,13 @@ import {
 const RADIUS = 10;
 
 function dot(id: string, x: number, y: number, selected = false): Dot {
-	return { id, position: { x, y }, selected };
+	return {
+		id,
+		position: { x, y },
+		selected,
+		speed: 180,
+		target: null,
+	};
 }
 
 function rect(x: number, y: number, width: number, height: number): Rect {
@@ -101,11 +107,15 @@ describe("applyMarqueeSelection", () => {
 			id: "a",
 			position: { x: 50, y: 50 },
 			selected: true,
+			speed: 180,
+			target: null,
 		});
 		expect(next.dots[1]).toEqual({
 			id: "b",
 			position: { x: 200, y: 200 },
 			selected: false,
+			speed: 180,
+			target: null,
 		});
 	});
 });

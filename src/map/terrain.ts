@@ -86,3 +86,56 @@ export function circleOverlapsWater(
 	}
 	return false;
 }
+
+/** Circle fully on the board and not overlapping water. */
+export function circleFitsOnLand(
+	map: MapDefinition,
+	center: Vec2,
+	radius: number,
+): boolean {
+	if (
+		center.x < radius ||
+		center.y < radius ||
+		center.x > map.width - radius ||
+		center.y > map.height - radius
+	) {
+		return false;
+	}
+	return !circleOverlapsWater(map, center, radius);
+}
+
+/**
+ * Last point on segment [from → to] where the circle still fits on land.
+ * If `from` is already blocked, returns `from`.
+ */
+export function lastWalkableOnSegment(
+	map: MapDefinition,
+	from: Vec2,
+	to: Vec2,
+	radius: number,
+): Vec2 {
+	if (circleFitsOnLand(map, to, radius)) {
+		return to;
+	}
+	if (!circleFitsOnLand(map, from, radius)) {
+		return from;
+	}
+
+	let lo = 0;
+	let hi = 1;
+	let best = from;
+	for (let i = 0; i < 16; i++) {
+		const mid = (lo + hi) / 2;
+		const point = {
+			x: from.x + (to.x - from.x) * mid,
+			y: from.y + (to.y - from.y) * mid,
+		};
+		if (circleFitsOnLand(map, point, radius)) {
+			best = point;
+			lo = mid;
+		} else {
+			hi = mid;
+		}
+	}
+	return best;
+}

@@ -20,6 +20,10 @@ export type Dot = {
 	/** World-space center. */
 	readonly position: Vec2;
 	readonly selected: boolean;
+	/** World units per second. Per-dot so classes can differ later. */
+	readonly speed: number;
+	/** RTS move destination; null when idle. */
+	readonly target: Vec2 | null;
 };
 
 export type GameState = {
@@ -30,4 +34,5 @@ export type GameState = {
 export type Input =
 	| { readonly type: "click"; readonly position: Vec2 }
 	| { readonly type: "marquee"; readonly rect: Rect }
-	| { readonly type: "marqueeEnd"; readonly rect: Rect };
+	| { readonly type: "marqueeEnd"; readonly rect: Rect }
+	| { readonly type: "move"; readonly position: Vec2 };
