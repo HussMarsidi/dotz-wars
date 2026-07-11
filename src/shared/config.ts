@@ -126,6 +126,27 @@ export const LOCAL_TEAM: TeamId = "blue";
 /** Starting gold per team. Income generation is out of scope for now. */
 export const STARTING_GOLD = 1000;
 
+/** Max concurrent production orders per city. */
+export const CITY_PRODUCTION_QUEUE_CAP = 8;
+
+/** Gold cost per unit kind (tunable). */
+export const UNIT_COST = {
+	scout: 50,
+	grunt: 75,
+	archer: 100,
+	mage: 150,
+	tank: 200,
+} as const;
+
+/** Train duration in seconds per unit kind (tunable). */
+export const UNIT_TRAIN_TIME = {
+	scout: 2,
+	grunt: 3,
+	archer: 4,
+	mage: 6,
+	tank: 8,
+} as const;
+
 /** City body square side length (world units). */
 export const CITY_SIZE = 48;
 /** Half-extent of the always-visible capture box around a city. */
