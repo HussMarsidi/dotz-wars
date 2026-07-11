@@ -45,3 +45,26 @@ describe("Camera.clampToBounds", () => {
 		expect(camera.y).toBe(0);
 	});
 });
+
+describe("Camera zoom limits", () => {
+	it("does not zoom out past fitting the whole map", () => {
+		const camera = new Camera();
+		camera.setWorldSize(1000, 800);
+		camera.setViewSize(400, 300);
+		camera.zoom = 1;
+		// fit = min(400/1000, 300/800) = 0.375
+		expect(camera.minZoom()).toBeCloseTo(0.375);
+
+		camera.zoomAt({ x: 200, y: 150 }, 0.01);
+		expect(camera.zoom).toBeCloseTo(0.375);
+	});
+
+	it("does not zoom in past CAMERA_ZOOM_MAX", () => {
+		const camera = new Camera();
+		camera.setWorldSize(1000, 800);
+		camera.setViewSize(400, 300);
+		camera.zoom = 1;
+		camera.zoomAt({ x: 200, y: 150 }, 100);
+		expect(camera.zoom).toBe(camera.maxZoom());
+	});
+});

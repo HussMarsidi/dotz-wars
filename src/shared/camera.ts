@@ -19,12 +19,14 @@ export class Camera {
 	setWorldSize(width: number, height: number): void {
 		this.worldWidth = width;
 		this.worldHeight = height;
+		this.clampZoom();
 		this.clampToBounds();
 	}
 
 	setViewSize(width: number, height: number): void {
 		this.viewWidth = width;
 		this.viewHeight = height;
+		this.clampZoom();
 		this.clampToBounds();
 	}
 
@@ -44,7 +46,7 @@ export class Camera {
 
 	/** Zoom keeping the world point under `screen` stable. */
 	zoomAt(screen: Vec2, factor: number): void {
-		const next = clamp(this.zoom * factor, CAMERA_ZOOM_MIN, CAMERA_ZOOM_MAX);
+		const next = clamp(this.zoom * factor, this.minZoom(), this.maxZoom());
 		if (next === this.zoom) {
 			return;
 		}
@@ -59,9 +61,31 @@ export class Camera {
 	centerOn(world: Vec2, viewWidth: number, viewHeight: number): void {
 		this.viewWidth = viewWidth;
 		this.viewHeight = viewHeight;
+		this.clampZoom();
 		this.x = viewWidth / 2 - world.x * this.zoom;
 		this.y = viewHeight / 2 - world.y * this.zoom;
 		this.clampToBounds();
+	}
+
+	/**
+	 * Zoom-out floor: cannot go past fitting the whole map in the view,
+	 * and never below `CAMERA_ZOOM_MIN`.
+	 */
+	minZoom(): number {
+		const fit = this.fitZoom();
+		if (fit === null) {
+			return CAMERA_ZOOM_MIN;
+		}
+		return Math.max(CAMERA_ZOOM_MIN, fit);
+	}
+
+	/** Zoom-in ceiling from config. */
+	maxZoom(): number {
+		return Math.max(this.minZoom(), CAMERA_ZOOM_MAX);
+	}
+
+	clampZoom(): void {
+		this.zoom = clamp(this.zoom, this.minZoom(), this.maxZoom());
 	}
 
 	/**
@@ -92,6 +116,22 @@ export class Camera {
 		} else {
 			this.y = clamp(this.y, this.viewHeight - scaledH, 0);
 		}
+	}
+
+	/** Zoom that fits the entire map inside the viewport, or null if unknown. */
+	private fitZoom(): number | null {
+		if (
+			this.worldWidth <= 0 ||
+			this.worldHeight <= 0 ||
+			this.viewWidth <= 0 ||
+			this.viewHeight <= 0
+		) {
+			return null;
+		}
+		return Math.min(
+			this.viewWidth / this.worldWidth,
+			this.viewHeight / this.worldHeight,
+		);
 	}
 }
 

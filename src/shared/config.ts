@@ -30,9 +30,11 @@ export const DOT_RADIUS = 12;
 /** Pointer travel below this (world units) counts as a click, not a marquee. */
 export const CLICK_DRAG_THRESHOLD = 4;
 
-/** Camera zoom limits / wheel factor. */
-export const CAMERA_ZOOM_MIN = 0.25;
-export const CAMERA_ZOOM_MAX = 2.5;
+/** Camera zoom limits / wheel factor. Tune these for feel. */
+/** Hard floor — also never zoom out past fitting the whole map in view. */
+export const CAMERA_ZOOM_MIN = 0.35;
+/** Hard ceiling for zoom-in. */
+export const CAMERA_ZOOM_MAX = 2;
 export const CAMERA_ZOOM_WHEEL_FACTOR = 1.08;
 
 export const DOT_COLOR = 0x4fc3f7;
