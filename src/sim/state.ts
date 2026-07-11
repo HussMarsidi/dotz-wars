@@ -21,7 +21,7 @@ function spawnTeam(teamId: TeamId, spawnX: number): Unit[] {
 }
 
 /**
- * Test lineup per team: two grunts + one of each other kind.
+ * Test lineup per team: two of each unit kind.
  *
  * TODO: other team will be managed by AI — for now both teams are player-selectable for testing.
  */

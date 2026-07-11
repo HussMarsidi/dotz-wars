@@ -94,11 +94,11 @@ export const SELECTION_STROKE_COLOR = 0xffffff;
 export const SELECTION_FILL_COLOR = 0xffffff;
 export const SELECTION_FILL_ALPHA = 0.15;
 
-/** Blue team spawn column (world x) and vertical spacing for the 5-unit lineup. */
+/** Blue team spawn column (world x) and vertical spacing for the test lineup. */
 export const BLUE_SPAWN_X = 420;
 export const RED_SPAWN_X = 1980;
-export const SPAWN_Y_START = 560;
-export const SPAWN_Y_GAP = 120;
+export const SPAWN_Y_START = 400;
+export const SPAWN_Y_GAP = 100;
 
 /** City body square side length (world units). */
 export const CITY_SIZE = 48;

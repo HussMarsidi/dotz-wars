@@ -26,13 +26,17 @@ const SPAWNERS: Record<
 	mage: Mage.spawn,
 };
 
-/** Test lineup: two grunts + one of each other kind (for Cmd+A same-type select). */
+/** Test lineup: two of each kind (for Cmd+A same-type select). */
 export const UNIT_LINEUP: readonly UnitKind[] = [
 	"grunt",
 	"grunt",
 	"archer",
+	"archer",
+	"tank",
 	"tank",
 	"scout",
+	"scout",
+	"mage",
 	"mage",
 ];
 
