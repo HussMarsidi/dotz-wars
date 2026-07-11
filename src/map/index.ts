@@ -1,3 +1,9 @@
 export { BATTLEFIELD_MAP } from "./battlefield";
-export { circleOverlapsWater, isWalkable, isWater } from "./terrain";
+export {
+	circleFitsOnLand,
+	circleOverlapsWater,
+	isWalkable,
+	isWater,
+	lastWalkableOnSegment,
+} from "./terrain";
 export type { MapDefinition, WaterBody, WaterEllipse } from "./types";
