@@ -1,4 +1,5 @@
 import { Application, Container, Graphics } from "pixi.js";
+import type { CityId } from "../cities";
 import { BATTLEFIELD_MAP } from "../map/battlefield";
 import type { MapDefinition } from "../map/types";
 import { Camera } from "../shared/camera";
@@ -19,6 +20,7 @@ import {
 import type { GameState } from "../shared/game-state";
 import type { DotId, Rect, Vec2 } from "../shared/types";
 import type { Unit } from "../units";
+import { type CityView, createCityView, syncCityView } from "./city-view";
 import { createDotView, type DotView, syncDotView } from "./dot-view";
 import { createMapView } from "./map-view";
 
@@ -38,10 +40,12 @@ export class Renderer {
 
 	private readonly world: Container;
 	private readonly mapLayer: Graphics;
+	private readonly citiesLayer: Container;
 	private readonly dotsLayer: Container;
 	private readonly projectileGfx: Graphics;
 	private readonly arrowGfx: Graphics;
 	private readonly marqueeGfx: Graphics;
+	private readonly cityViews = new Map<CityId, CityView>();
 	private readonly dotViews = new Map<DotId, DotView>();
 
 	private constructor(app: Application, map: MapDefinition) {
@@ -53,11 +57,13 @@ export class Renderer {
 
 		this.world = new Container();
 		this.mapLayer = createMapView(map);
+		this.citiesLayer = new Container();
 		this.dotsLayer = new Container();
 		this.projectileGfx = new Graphics();
 		this.arrowGfx = new Graphics();
 		this.marqueeGfx = new Graphics();
 		this.world.addChild(this.mapLayer);
+		this.world.addChild(this.citiesLayer);
 		this.world.addChild(this.dotsLayer);
 		this.world.addChild(this.projectileGfx);
 		this.world.addChild(this.arrowGfx);
@@ -100,6 +106,38 @@ export class Renderer {
 	}
 
 	sync(state: GameState, marquee: MarqueeView): void {
+		this.syncCities(state);
+		this.syncDots(state);
+		this.drawProjectiles(state);
+		this.drawMoveArrows(state);
+		this.drawMarquee(marquee);
+	}
+
+	private syncCities(state: GameState): void {
+		const seen = new Set<CityId>();
+
+		for (const city of state.cities) {
+			seen.add(city.id);
+			let view = this.cityViews.get(city.id);
+			if (view === undefined) {
+				view = createCityView(city);
+				this.cityViews.set(city.id, view);
+				this.citiesLayer.addChild(view.root);
+			} else {
+				syncCityView(view, city);
+			}
+		}
+
+		for (const [id, view] of this.cityViews) {
+			if (!seen.has(id)) {
+				this.citiesLayer.removeChild(view.root);
+				view.root.destroy({ children: true });
+				this.cityViews.delete(id);
+			}
+		}
+	}
+
+	private syncDots(state: GameState): void {
 		const seen = new Set<DotId>();
 
 		for (const unit of state.units) {
@@ -121,10 +159,6 @@ export class Renderer {
 				this.dotViews.delete(id);
 			}
 		}
-
-		this.drawProjectiles(state);
-		this.drawMoveArrows(state);
-		this.drawMarquee(marquee);
 	}
 
 	private drawProjectiles(state: GameState): void {

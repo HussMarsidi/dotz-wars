@@ -23,7 +23,7 @@ function rect(x: number, y: number, width: number, height: number): Rect {
 }
 
 function stateOf(...units: Unit[]): GameState {
-	return { units, projectiles: [], winner: null };
+	return { units, cities: [], projectiles: [], winner: null };
 }
 
 describe("circleOverlapsRect", () => {

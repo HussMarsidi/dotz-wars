@@ -1,3 +1,4 @@
+import type { City } from "../cities";
 import {
 	circleFitsOnLand,
 	lastWalkableOnSegment,
@@ -8,6 +9,7 @@ import { PATH_WAYPOINT_REACH } from "../shared/config";
 import type { GameState } from "../shared/game-state";
 import type { TeamId, Vec2 } from "../shared/types";
 import type { OrderKind, Unit } from "../units";
+import { checkCityWinner, tickCapture } from "./capture";
 import { tickCombat, tickProjectiles } from "./combat";
 import { findPath } from "./navigation";
 import { separateUnits } from "./separation";
@@ -177,33 +179,9 @@ function removeDead(units: readonly Unit[]): readonly Unit[] {
 	return units.filter((unit) => unit.isAlive);
 }
 
-/**
- * Team wipe → winner.
- * TODO: show remaining unit counts in the UI.
- */
-export function checkWinner(units: readonly Unit[]): TeamId | null {
-	let blueAlive = false;
-	let redAlive = false;
-	for (const unit of units) {
-		if (!unit.isAlive) {
-			continue;
-		}
-		if (unit.teamId === "blue") {
-			blueAlive = true;
-		} else if (unit.teamId === "red") {
-			redAlive = true;
-		} else {
-			const _exhaustive: never = unit.teamId;
-			void _exhaustive;
-		}
-	}
-	if (blueAlive && !redAlive) {
-		return "blue";
-	}
-	if (redAlive && !blueAlive) {
-		return "red";
-	}
-	return null;
+/** One team owns every city → that team wins. */
+export function checkWinner(cities: readonly City[]): TeamId | null {
+	return checkCityWinner(cities);
 }
 
 /** Projectile id counter lives outside state for now (sim-local). */
@@ -234,10 +212,12 @@ export function step(
 
 	const flights = tickProjectiles(combat.units, combat.projectiles, dt);
 	const living = removeDead(flights.units);
-	const winner = checkWinner(living);
+	const cities = tickCapture(state.cities, living, dt);
+	const winner = checkWinner(cities);
 
 	return {
 		units: living,
+		cities,
 		projectiles: flights.projectiles,
 		winner,
 	};
@@ -256,6 +236,7 @@ export function interpolateState(
 
 	return {
 		winner: current.winner,
+		cities: current.cities,
 		units: current.units.map((unit) => {
 			const prev = prevById.get(unit.id);
 			if (prev === undefined) {

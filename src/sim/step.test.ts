@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { createCity } from "../cities";
 import type { MapDefinition } from "../map/types";
 import type { GameState } from "../shared/game-state";
 import type { Unit } from "../units";
@@ -54,7 +55,7 @@ const openMap: MapDefinition = {
 const RADIUS = 10;
 
 function stateOf(...units: Unit[]): GameState {
-	return { units, projectiles: [], winner: null };
+	return { units, cities: [], projectiles: [], winner: null };
 }
 
 describe("issueMoveOrder", () => {
@@ -229,10 +230,19 @@ describe("separateUnits", () => {
 });
 
 describe("checkWinner", () => {
-	it("returns the surviving team on wipe", () => {
-		expect(checkWinner([Grunt.spawn("a", "blue", { x: 0, y: 0 })])).toBe(
-			"blue",
-		);
+	it("returns the team that owns every city", () => {
+		expect(
+			checkWinner([
+				createCity("a", "blue", { x: 0, y: 0 }, "A"),
+				createCity("b", "blue", { x: 1, y: 0 }, "B"),
+			]),
+		).toBe("blue");
+		expect(
+			checkWinner([
+				createCity("a", "blue", { x: 0, y: 0 }, "A"),
+				createCity("b", "red", { x: 1, y: 0 }, "B"),
+			]),
+		).toBeNull();
 		expect(checkWinner([])).toBeNull();
 	});
 });

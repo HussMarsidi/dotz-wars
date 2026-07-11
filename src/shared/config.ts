@@ -100,6 +100,19 @@ export const RED_SPAWN_X = 1980;
 export const SPAWN_Y_START = 560;
 export const SPAWN_Y_GAP = 120;
 
+/** City body square side length (world units). */
+export const CITY_SIZE = 48;
+/** Half-extent of the always-visible capture box around a city. */
+export const CITY_CAPTURE_HALF = 100;
+/** Seconds an enemy must hold an undefended city to flip ownership. */
+export const CITY_CAPTURE_DURATION = 1.5;
+export const CITY_ZONE_STROKE_COLOR = 0xffffff;
+export const CITY_ZONE_STROKE_ALPHA = 0.4;
+export const CITY_ZONE_STROKE_WIDTH = 2;
+export const CITY_CAPTURE_PROGRESS_COLOR = 0xffeb3b;
+export const CITY_CAPTURE_PROGRESS_WIDTH = 3;
+export const CITY_LABEL_COLOR = 0xffffff;
+
 /** @deprecated Prefer TEAM_COLORS + selection ring. Kept only if something still imports it. */
 export const DOT_COLOR = TEAM_COLORS.blue;
 export const DOT_SELECTED_COLOR = 0xffeb3b;

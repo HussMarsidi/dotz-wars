@@ -1,3 +1,4 @@
+import { createInitialCities } from "../cities";
 import {
 	BLUE_SPAWN_X,
 	RED_SPAWN_X,
@@ -28,6 +29,7 @@ export function createInitialUnits(): Unit[] {
 export function createInitialState(): GameState {
 	return {
 		units: createInitialUnits(),
+		cities: createInitialCities(),
 		projectiles: [],
 		winner: null,
 	};
