@@ -1,0 +1,22 @@
+{
+	"name": "dotz-wars",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"test": "vitest",
+		"check": "biome check --write ."
+	},
+	"packageManager": "pnpm@10.12.4",
+	"dependencies": {
+		"pixi.js": "^8.19.0"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.3",
+		"typescript": "^7.0.2",
+		"vite": "^8.1.4",
+		"vitest": "^4.1.10"
+	}
+}
