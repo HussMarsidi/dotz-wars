@@ -12,7 +12,11 @@ import {
 } from "../shared/config";
 import type { GameState } from "../shared/game-state";
 import type { TeamId, Vec2 } from "../shared/types";
-import { collectSources, computeTerritory } from "../territory";
+import {
+	applyTerritoryDrain,
+	collectSources,
+	computeTerritory,
+} from "../territory";
 import type { OrderKind, Unit } from "../units";
 import { checkCityWinner, tickCapture } from "./capture";
 import { tickCombat, tickProjectiles } from "./combat";
@@ -216,8 +220,15 @@ export function step(
 	nextProjectileId = combat.nextProjectileId;
 
 	const flights = tickProjectiles(combat.units, combat.projectiles, dt);
-	const living = removeDead(flights.units);
-	const cities = tickCapture(state.cities, living, dt);
+	const afterCombat = removeDead(flights.units);
+	const cities = tickCapture(state.cities, afterCombat, dt);
+	const fieldForDrain = computeTerritory(
+		BOARD_WIDTH,
+		BOARD_HEIGHT,
+		collectSources(cities, afterCombat),
+	);
+	const drained = applyTerritoryDrain(afterCombat, fieldForDrain, dt);
+	const living = removeDead(drained);
 	const territory = computeTerritory(
 		BOARD_WIDTH,
 		BOARD_HEIGHT,

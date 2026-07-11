@@ -129,6 +129,8 @@ export const TERRITORY_TINT_ALPHA = 0.2;
 export const TERRITORY_BORDER_COLOR = 0xffffff;
 export const TERRITORY_BORDER_ALPHA = 0.75;
 export const TERRITORY_BORDER_WIDTH = 2;
+/** Flat HP lost per second while standing on enemy-owned ground (neutral is safe). */
+export const TERRITORY_DRAIN_HP_PER_SEC = 14;
 
 /** @deprecated Prefer TEAM_COLORS + selection ring. Kept only if something still imports it. */
 export const DOT_COLOR = TEAM_COLORS.blue;

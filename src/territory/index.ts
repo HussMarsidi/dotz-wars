@@ -1,3 +1,4 @@
+export { applyTerritoryDrain } from "./drain";
 export {
 	computeTerritory,
 	emptyTerritory,
