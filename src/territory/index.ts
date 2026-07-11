@@ -1,4 +1,4 @@
-export { applyTerritoryDrain } from "./drain";
+export { applyTerritoryDrain, buddyDrainMultiplier } from "./drain";
 export {
 	computeTerritory,
 	emptyTerritory,

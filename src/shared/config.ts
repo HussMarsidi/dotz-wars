@@ -106,12 +106,12 @@ export const RED_SPAWN_X = 1980;
 export const SPAWN_Y_START = 400;
 export const SPAWN_Y_GAP = 100;
 
-/** Per-shape slot spacing (world units). */
+/** Per-shape slot spacing (world units). Compact so stacked influence grows. */
 export const FORMATION_SPACING_BY_SHAPE = {
-	line: 44,
-	wedge: 48,
-	column: 36,
-	box: 40,
+	line: 25,
+	wedge: 25,
+	column: 25,
+	box: 25,
 } as const;
 /** @deprecated Prefer FORMATION_SPACING_BY_SHAPE / spacingForShape. */
 export const FORMATION_SPACING = FORMATION_SPACING_BY_SHAPE.line;
@@ -141,9 +141,9 @@ export const TERRITORY_CELL = 16;
 /** Same strength for all cities in Phase 2 — per-city sizes come later. */
 export const CITY_INFLUENCE_STRENGTH = 100;
 export const CITY_INFLUENCE_RADIUS = 320;
-/** Small local bump — units nudge the fringe, not paint large blobs alone. */
-export const UNIT_INFLUENCE_STRENGTH = 14;
-export const UNIT_INFLUENCE_RADIUS = 42;
+/** Local aura — stacks when units cluster, so formations push the fringe deeper. */
+export const UNIT_INFLUENCE_STRENGTH = 20;
+export const UNIT_INFLUENCE_RADIUS = 72;
 /** |blue - red| below this → neutral (no HP drain). */
 export const TERRITORY_NEUTRAL_EPSILON = 1;
 export const TERRITORY_TINT_ALPHA = 0.2;
@@ -152,10 +152,17 @@ export const TERRITORY_BORDER_ALPHA = 0.75;
 export const TERRITORY_BORDER_WIDTH = 2;
 /**
  * Max HP lost per second when fully overwhelmed on enemy ground.
- * Actual drain = this * overwhelm, where overwhelm = (enemy - own) / enemy
- * (0 at the seam, → 1 deep where own influence is tiny).
+ * Actual drain = this * overwhelm * buddyMult * dt, where overwhelm =
+ * (enemy - own) / enemy (0 at the seam, → 1 deep where own influence is tiny)
+ * and buddyMult shrinks when living teammates stand nearby.
  */
 export const TERRITORY_DRAIN_HP_PER_SEC = 22;
+/** Teammates within this range slow territory drain for the unit. */
+export const TERRITORY_DRAIN_BUDDY_RADIUS = 64;
+/** Drain multiplier reduction per nearby living teammate (before cap). */
+export const TERRITORY_DRAIN_BUDDY_REDUCTION_PER = 0.12;
+/** Max total reduction from buddies (0.75 → drain can drop to 25%). */
+export const TERRITORY_DRAIN_BUDDY_REDUCTION_MAX = 0.75;
 
 /** @deprecated Prefer TEAM_COLORS + selection ring. Kept only if something still imports it. */
 export const DOT_COLOR = TEAM_COLORS.blue;
