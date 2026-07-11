@@ -38,8 +38,7 @@ export type UnitFields = {
 /**
  * Base combat unit. Subclasses own stats + combat mode.
  *
- * NOTE: when an enemy leaves attack range we hold (no chase). Chase / attack-move later.
- * TODO: other teams will be AI-controlled — selection of enemy teams is test-only for now.
+ * NOTE: out-of-range enemies are chased via `tickChase` (aggro radius).
  */
 export abstract class Unit {
 	readonly id: DotId;
