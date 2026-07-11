@@ -124,9 +124,10 @@ export class Renderer {
 		groupLabels?: ReadonlyMap<DotId, string>,
 		formationPreview: FormationPreview | null = null,
 		formationLabels?: ReadonlyMap<DotId, string>,
+		selectedCityId: CityId | null = null,
 	): void {
 		drawTerritory(this.territoryGfx, state.territory);
-		this.syncCities(state);
+		this.syncCities(state, selectedCityId);
 		this.syncDots(
 			state,
 			groupLabels ?? EMPTY_GROUP_LABELS,
@@ -138,18 +139,20 @@ export class Renderer {
 		this.drawMarquee(marquee);
 	}
 
-	private syncCities(state: GameState): void {
+	private syncCities(state: GameState, selectedCityId: CityId | null): void {
 		const seen = new Set<CityId>();
 
 		for (const city of state.cities) {
 			seen.add(city.id);
 			let view = this.cityViews.get(city.id);
+			const selected = city.id === selectedCityId;
 			if (view === undefined) {
 				view = createCityView(city);
 				this.cityViews.set(city.id, view);
 				this.citiesLayer.addChild(view.root);
+				syncCityView(view, city, selected);
 			} else {
-				syncCityView(view, city);
+				syncCityView(view, city, selected);
 			}
 		}
 

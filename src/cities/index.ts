@@ -16,4 +16,5 @@ export {
 	settleQueuesAfterCapture,
 	tickProduction,
 } from "./production";
+export { cityById, findOwnedCityAtPoint } from "./selection";
 export { CITY_SPAWNS, createInitialCities } from "./spawns";
