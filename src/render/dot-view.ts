@@ -33,6 +33,7 @@ export type DotView = {
 	readonly fx: Graphics;
 	readonly hpBar: Graphics;
 	readonly label: Text;
+	readonly groupBadge: Text;
 };
 
 /** Maps a sim unit → a view container. Render-only; never mutates sim. */
@@ -52,16 +53,30 @@ export function createDotView(unit: Unit): DotView {
 		},
 	});
 	label.anchor.set(0.5);
+	const groupBadge = new Text({
+		text: "",
+		style: {
+			fontFamily: "ui-sans-serif, system-ui, sans-serif",
+			fontSize: 9,
+			fontWeight: "700",
+			fill: 0xfff59d,
+			align: "left",
+			stroke: { color: 0x000000, width: 2 },
+		},
+	});
+	groupBadge.anchor.set(0.5, 1);
+	groupBadge.visible = false;
 	root.addChild(body);
 	root.addChild(fx);
 	root.addChild(hpBar);
 	root.addChild(label);
-	const view = { root, body, fx, hpBar, label };
+	root.addChild(groupBadge);
+	const view = { root, body, fx, hpBar, label, groupBadge };
 	syncDotView(view, unit);
 	return view;
 }
 
-export function syncDotView(view: DotView, unit: Unit): void {
+export function syncDotView(view: DotView, unit: Unit, groupLabel = ""): void {
 	const fill =
 		unit.hitFlash > 0
 			? mixColor(
@@ -93,6 +108,20 @@ export function syncDotView(view: DotView, unit: Unit): void {
 
 	drawHpBar(view.hpBar, unit);
 	view.label.position.set(lunge.x, lunge.y);
+
+	if (groupLabel.length > 0) {
+		view.groupBadge.text = groupLabel;
+		view.groupBadge.visible = true;
+		// Top-left of the dot body.
+		view.groupBadge.position.set(
+			lunge.x - DOT_RADIUS + 2,
+			lunge.y - DOT_RADIUS + 1,
+		);
+	} else {
+		view.groupBadge.text = "";
+		view.groupBadge.visible = false;
+	}
+
 	view.root.position.set(unit.position.x, unit.position.y);
 }
 

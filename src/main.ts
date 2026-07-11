@@ -10,6 +10,13 @@ import type { GameState } from "./shared/game-state";
 import type { Rect } from "./shared/types";
 import { attachShortcuts } from "./shortcuts";
 import {
+	assignControlGroup,
+	controlGroupLabels,
+	createControlGroups,
+	isControlGroupSlot,
+	selectControlGroup,
+} from "./sim/control-groups";
+import {
 	applyClickSelection,
 	applyMarqueeSelection,
 	clearSelection,
@@ -35,6 +42,7 @@ async function main(): Promise<void> {
 	let accumulator = 0;
 	let marquee: Rect | null = null;
 	let mode: PointerMode = "select";
+	const controlGroups = createControlGroups();
 
 	const renderer = await Renderer.create(host);
 	const map = renderer.map;
@@ -42,7 +50,7 @@ async function main(): Promise<void> {
 	const redraw = (alpha = 1) => {
 		const viewState =
 			alpha >= 1 ? current : interpolateState(previous, current, alpha);
-		renderer.sync(viewState, marquee);
+		renderer.sync(viewState, marquee, controlGroupLabels(controlGroups));
 	};
 
 	const setMode = (next: PointerMode) => {
@@ -63,11 +71,35 @@ async function main(): Promise<void> {
 		onClearSelection: deselectAll,
 	});
 
-	attachShortcuts({
-		setSelectMode: () => setMode("select"),
-		setPanMode: () => setMode("pan"),
-		clearSelection: deselectAll,
-	});
+	attachShortcuts(
+		{
+			setSelectMode: () => setMode("select"),
+			setPanMode: () => setMode("pan"),
+			clearSelection: deselectAll,
+		},
+		{
+			assignGroup: (slot) => {
+				if (!isControlGroupSlot(slot)) {
+					return;
+				}
+				assignControlGroup(controlGroups, slot, current);
+				redraw();
+			},
+			selectGroup: (slot) => {
+				if (!isControlGroupSlot(slot)) {
+					return;
+				}
+				marquee = null;
+				const next = selectControlGroup(current, controlGroups, slot);
+				if (next === current) {
+					return;
+				}
+				previous = current;
+				current = next;
+				redraw();
+			},
+		},
+	);
 
 	attachPointerInput({
 		canvas: renderer.canvas,

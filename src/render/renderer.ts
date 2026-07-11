@@ -27,6 +27,8 @@ import { drawTerritory } from "./territory-view";
 
 export type MarqueeView = Rect | null;
 
+const EMPTY_GROUP_LABELS: ReadonlyMap<DotId, string> = new Map();
+
 const ARROW_HEAD_LENGTH = 14;
 const ARROW_HEAD_WIDTH = 8;
 
@@ -109,10 +111,14 @@ export class Renderer {
 		this.world.scale.set(this.camera.zoom);
 	}
 
-	sync(state: GameState, marquee: MarqueeView): void {
+	sync(
+		state: GameState,
+		marquee: MarqueeView,
+		groupLabels?: ReadonlyMap<DotId, string>,
+	): void {
 		drawTerritory(this.territoryGfx, state.territory);
 		this.syncCities(state);
-		this.syncDots(state);
+		this.syncDots(state, groupLabels ?? EMPTY_GROUP_LABELS);
 		this.drawProjectiles(state);
 		this.drawMoveArrows(state);
 		this.drawMarquee(marquee);
@@ -142,18 +148,23 @@ export class Renderer {
 		}
 	}
 
-	private syncDots(state: GameState): void {
+	private syncDots(
+		state: GameState,
+		groupLabels: ReadonlyMap<DotId, string>,
+	): void {
 		const seen = new Set<DotId>();
 
 		for (const unit of state.units) {
 			seen.add(unit.id);
+			const groupLabel = groupLabels.get(unit.id) ?? "";
 			let view = this.dotViews.get(unit.id);
 			if (view === undefined) {
 				view = createDotView(unit);
 				this.dotViews.set(unit.id, view);
 				this.dotsLayer.addChild(view.root);
+				syncDotView(view, unit, groupLabel);
 			} else {
-				syncDotView(view, unit);
+				syncDotView(view, unit, groupLabel);
 			}
 		}
 

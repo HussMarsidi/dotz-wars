@@ -95,6 +95,14 @@ function withSelection(
 	};
 }
 
+/** Select exactly the given unit ids (others deselected). */
+export function selectByIds(
+	state: GameState,
+	selectedIds: ReadonlySet<DotId>,
+): GameState {
+	return withSelection(state, selectedIds);
+}
+
 /**
  * Apply marquee selection flags.
  *
