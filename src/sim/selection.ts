@@ -114,27 +114,43 @@ export function applyMarqueeSelection(
  *
  * TODO: restrict selection to the local player team once AI owns the other side.
  */
-export function applyClickSelection(
-	state: GameState,
+export function findUnitAtPoint(
+	units: readonly Unit[],
 	point: Vec2,
 	radius: number,
-): GameState {
-	let bestId: DotId | null = null;
+): Unit | null {
+	let best: Unit | null = null;
 	let bestDist = Number.POSITIVE_INFINITY;
 
-	for (const unit of state.units) {
+	for (const unit of units) {
 		if (!pointHitsCircle(point, unit.position, radius)) {
 			continue;
 		}
 		const dist = distanceSquared(point, unit.position);
 		if (dist < bestDist) {
 			bestDist = dist;
-			bestId = unit.id;
+			best = unit;
 		}
 	}
+	return best;
+}
 
-	if (bestId === null) {
+export function applyClickSelection(
+	state: GameState,
+	point: Vec2,
+	radius: number,
+): GameState {
+	const hit = findUnitAtPoint(state.units, point, radius);
+	if (hit === null) {
 		return withSelection(state, new Set());
 	}
-	return withSelection(state, new Set([bestId]));
+	return withSelection(state, new Set([hit.id]));
+}
+
+/** Clear every unit's selected flag. */
+export function clearSelection(state: GameState): GameState {
+	if (!state.units.some((unit) => unit.selected)) {
+		return state;
+	}
+	return withSelection(state, new Set());
 }

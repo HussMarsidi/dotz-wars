@@ -7,6 +7,9 @@ export type CombatMode = "melee" | "ranged";
 
 export type UnitKind = "grunt" | "archer" | "tank" | "scout" | "mage";
 
+/** Ground click vs enemy click — drives move-arrow color. */
+export type OrderKind = "move" | "attack";
+
 /** Mutable fields shared by every unit copy. */
 export type UnitFields = {
 	readonly id: DotId;
@@ -18,6 +21,10 @@ export type UnitFields = {
 	readonly target: Vec2 | null;
 	/** Remaining waypoints to `target`. */
 	readonly path: readonly Vec2[];
+	/** Move (white) vs attack (red) order for the current target. */
+	readonly orderKind: OrderKind;
+	/** Seconds since the current order was issued (for attack-arrow blink). */
+	readonly orderAge: number;
 	/** Seconds until this unit may attack again. */
 	readonly attackTimer: number;
 	/** Remaining attack lunge / slash anim (seconds). */
@@ -42,6 +49,8 @@ export abstract class Unit {
 	readonly hp: number;
 	readonly target: Vec2 | null;
 	readonly path: readonly Vec2[];
+	readonly orderKind: OrderKind;
+	readonly orderAge: number;
 	readonly attackTimer: number;
 	readonly attackAnim: number;
 	readonly hitFlash: number;
@@ -55,6 +64,8 @@ export abstract class Unit {
 		this.hp = fields.hp;
 		this.target = fields.target;
 		this.path = fields.path;
+		this.orderKind = fields.orderKind;
+		this.orderAge = fields.orderAge;
 		this.attackTimer = fields.attackTimer;
 		this.attackAnim = fields.attackAnim;
 		this.hitFlash = fields.hitFlash;
@@ -103,6 +114,8 @@ export abstract class Unit {
 			hp: partial.hp ?? this.hp,
 			target: partial.target !== undefined ? partial.target : this.target,
 			path: partial.path ?? this.path,
+			orderKind: partial.orderKind ?? this.orderKind,
+			orderAge: partial.orderAge ?? this.orderAge,
 			attackTimer: partial.attackTimer ?? this.attackTimer,
 			attackAnim: partial.attackAnim ?? this.attackAnim,
 			hitFlash: partial.hitFlash ?? this.hitFlash,

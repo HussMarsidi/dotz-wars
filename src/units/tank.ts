@@ -25,6 +25,8 @@ export class Tank extends Unit {
 			hp: 180,
 			target: null,
 			path: [],
+			orderKind: "move",
+			orderAge: 0,
 			attackTimer: 0,
 			attackAnim: 0,
 			hitFlash: 0,

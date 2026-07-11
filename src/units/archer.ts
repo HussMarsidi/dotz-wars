@@ -25,6 +25,8 @@ export class Archer extends Unit {
 			hp: 70,
 			target: null,
 			path: [],
+			orderKind: "move",
+			orderAge: 0,
 			attackTimer: 0,
 			attackAnim: 0,
 			hitFlash: 0,

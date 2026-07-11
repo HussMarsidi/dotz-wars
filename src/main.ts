@@ -12,7 +12,8 @@ import { attachShortcuts } from "./shortcuts";
 import {
 	applyClickSelection,
 	applyMarqueeSelection,
-	pointHitsCircle,
+	clearSelection,
+	findUnitAtPoint,
 } from "./sim/selection";
 import { createInitialState } from "./sim/state";
 import {
@@ -50,13 +51,22 @@ async function main(): Promise<void> {
 		renderer.canvas.style.cursor = next === "pan" ? "grab" : "default";
 	};
 
+	const deselectAll = () => {
+		marquee = null;
+		previous = current;
+		current = clearSelection(current);
+		redraw();
+	};
+
 	const toolbar = mountToolbar(host, {
 		onModeChange: setMode,
+		onClearSelection: deselectAll,
 	});
 
 	attachShortcuts({
 		setSelectMode: () => setMode("select"),
 		setPanMode: () => setMode("pan"),
+		clearSelection: deselectAll,
 	});
 
 	attachPointerInput({
@@ -68,16 +78,41 @@ async function main(): Promise<void> {
 		handlers: {
 			onClick: (position) => {
 				marquee = null;
-				const hitUnit = current.units.some((unit) =>
-					pointHitsCircle(position, unit.position, DOT_RADIUS),
-				);
-				if (!hitUnit && stateHasSelection(current)) {
-					const next = issueMoveOrder(current, position, map, DOT_RADIUS);
-					previous = current;
-					current = next;
-					redraw();
-					return;
+
+				if (stateHasSelection(current)) {
+					const hit = findUnitAtPoint(current.units, position, DOT_RADIUS);
+					if (hit === null) {
+						const next = issueMoveOrder(
+							current,
+							position,
+							map,
+							DOT_RADIUS,
+							"move",
+						);
+						previous = current;
+						current = next;
+						redraw();
+						return;
+					}
+
+					const selectedEnemyOfHit = current.units.some(
+						(unit) => unit.selected && unit.teamId !== hit.teamId,
+					);
+					if (selectedEnemyOfHit) {
+						const next = issueMoveOrder(
+							current,
+							hit.position,
+							map,
+							DOT_RADIUS,
+							"attack",
+						);
+						previous = current;
+						current = next;
+						redraw();
+						return;
+					}
 				}
+
 				previous = current;
 				current = applyClickSelection(current, position, DOT_RADIUS);
 				redraw();

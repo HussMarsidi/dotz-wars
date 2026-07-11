@@ -3,10 +3,24 @@ import { SHORTCUT_BINDINGS } from "../shortcuts";
 
 export type ToolbarHandlers = {
 	readonly onModeChange: (mode: PointerMode) => void;
+	readonly onClearSelection: () => void;
 };
 
+function bindingLabel(
+	action: (typeof SHORTCUT_BINDINGS)[number]["action"],
+): string {
+	const binding = SHORTCUT_BINDINGS.find((b) => b.action === action);
+	if (binding === undefined) {
+		return "";
+	}
+	if (binding.key === "escape") {
+		return "Esc";
+	}
+	return binding.key.toUpperCase();
+}
+
 /**
- * Top toolbar: Select / Drag. Labels include shortcut keys from the registry.
+ * Top toolbar: Select / Drag / Deselect. Labels include shortcut keys from the registry.
  */
 export function mountToolbar(
 	host: HTMLElement,
@@ -19,28 +33,28 @@ export function mountToolbar(
 	bar.id = "toolbar";
 	bar.className = "toolbar";
 
-	const selectLabel =
-		SHORTCUT_BINDINGS.find((b) => b.action === "setSelectMode")?.key ?? "a";
-	const panLabel =
-		SHORTCUT_BINDINGS.find((b) => b.action === "setPanMode")?.key ?? "s";
-
 	const selectBtn = document.createElement("button");
 	selectBtn.type = "button";
 	selectBtn.dataset.mode = "select";
-	selectBtn.textContent = `Select (${selectLabel.toUpperCase()})`;
+	selectBtn.textContent = `Select (${bindingLabel("setSelectMode")})`;
 
 	const panBtn = document.createElement("button");
 	panBtn.type = "button";
 	panBtn.dataset.mode = "pan";
-	panBtn.textContent = `Drag (${panLabel.toUpperCase()})`;
+	panBtn.textContent = `Drag (${bindingLabel("setPanMode")})`;
 
-	bar.append(selectBtn, panBtn);
+	const deselectBtn = document.createElement("button");
+	deselectBtn.type = "button";
+	deselectBtn.dataset.action = "clearSelection";
+	deselectBtn.textContent = `Deselect (${bindingLabel("clearSelection")})`;
+
+	bar.append(selectBtn, panBtn, deselectBtn);
 	host.appendChild(bar);
 
-	const buttons = [selectBtn, panBtn];
+	const modeButtons = [selectBtn, panBtn];
 
 	const setMode = (mode: PointerMode) => {
-		for (const button of buttons) {
+		for (const button of modeButtons) {
 			button.classList.toggle("is-active", button.dataset.mode === mode);
 		}
 		host.dataset.pointerMode = mode;
@@ -49,6 +63,10 @@ export function mountToolbar(
 	const onClick = (event: MouseEvent) => {
 		const target = event.target;
 		if (!(target instanceof HTMLButtonElement)) {
+			return;
+		}
+		if (target.dataset.action === "clearSelection") {
+			handlers.onClearSelection();
 			return;
 		}
 		const mode = target.dataset.mode;

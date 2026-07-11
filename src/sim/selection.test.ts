@@ -7,6 +7,7 @@ import {
 	applyClickSelection,
 	applyMarqueeSelection,
 	circleOverlapsRect,
+	clearSelection,
 	pointHitsCircle,
 	selectUnitsInRect,
 } from "./selection";
@@ -142,5 +143,14 @@ describe("applyClickSelection", () => {
 		const next = applyClickSelection(state, { x: 58, y: 50 }, RADIUS);
 		expect(next.units[0]?.selected).toBe(false);
 		expect(next.units[1]?.selected).toBe(true);
+	});
+});
+
+describe("clearSelection", () => {
+	it("clears all selected flags", () => {
+		const state = stateOf(unit("a", 50, 50, true), unit("b", 200, 200, true));
+		const next = clearSelection(state);
+		expect(next.units[0]?.selected).toBe(false);
+		expect(next.units[1]?.selected).toBe(false);
 	});
 });

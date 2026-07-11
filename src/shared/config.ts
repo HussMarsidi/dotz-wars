@@ -84,6 +84,11 @@ export const WATER_COLOR = 0x7ec8e3;
 
 export const MOVE_ARROW_COLOR = 0xffffff;
 export const MOVE_ARROW_ALPHA = 0.85;
+/** Attack-order arrow (click enemy while selected). */
+export const ATTACK_ARROW_COLOR = 0xef5350;
+/** How long the attack arrow blinks after the order (seconds). */
+export const ATTACK_ARROW_BLINK_DURATION = 2.5;
+export const ATTACK_ARROW_BLINK_HZ = 4;
 
 export const SELECTION_STROKE_COLOR = 0xffffff;
 export const SELECTION_FILL_COLOR = 0xffffff;

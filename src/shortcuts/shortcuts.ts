@@ -3,7 +3,7 @@
  * Keys are lowercase `KeyboardEvent.key` values.
  */
 
-export type ShortcutAction = "setSelectMode" | "setPanMode";
+export type ShortcutAction = "setSelectMode" | "setPanMode" | "clearSelection";
 
 export type ShortcutBinding = {
 	readonly key: string;
@@ -14,6 +14,7 @@ export type ShortcutBinding = {
 export const SHORTCUT_BINDINGS: readonly ShortcutBinding[] = [
 	{ key: "a", action: "setSelectMode", label: "Select" },
 	{ key: "s", action: "setPanMode", label: "Drag" },
+	{ key: "escape", action: "clearSelection", label: "Deselect" },
 ] as const;
 
 export type ShortcutHandlers = {

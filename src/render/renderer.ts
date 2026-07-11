@@ -3,6 +3,9 @@ import { BATTLEFIELD_MAP } from "../map/battlefield";
 import type { MapDefinition } from "../map/types";
 import { Camera } from "../shared/camera";
 import {
+	ATTACK_ARROW_BLINK_DURATION,
+	ATTACK_ARROW_BLINK_HZ,
+	ATTACK_ARROW_COLOR,
 	BOARD_HEIGHT,
 	BOARD_WIDTH,
 	MOVE_ARROW_ALPHA,
@@ -15,6 +18,7 @@ import {
 } from "../shared/config";
 import type { GameState } from "../shared/game-state";
 import type { DotId, Rect, Vec2 } from "../shared/types";
+import type { Unit } from "../units";
 import { createDotView, type DotView, syncDotView } from "./dot-view";
 import { createMapView } from "./map-view";
 
@@ -138,13 +142,11 @@ export class Renderer {
 			if (unit.target === null) {
 				continue;
 			}
-			drawArrow(
-				this.arrowGfx,
-				unit.position,
-				unit.target,
-				MOVE_ARROW_COLOR,
-				MOVE_ARROW_ALPHA,
-			);
+			const { color, alpha } = arrowStyle(unit);
+			if (alpha <= 0.05) {
+				continue;
+			}
+			drawArrow(this.arrowGfx, unit.position, unit.target, color, alpha);
 		}
 	}
 
@@ -167,6 +169,21 @@ export class Renderer {
 			.fill({ color: SELECTION_FILL_COLOR, alpha: SELECTION_FILL_ALPHA })
 			.stroke({ width: 1, color: SELECTION_STROKE_COLOR });
 	}
+}
+
+function arrowStyle(unit: Unit): { color: number; alpha: number } {
+	if (unit.orderKind !== "attack") {
+		return { color: MOVE_ARROW_COLOR, alpha: MOVE_ARROW_ALPHA };
+	}
+
+	let alpha = MOVE_ARROW_ALPHA;
+	if (unit.orderAge < ATTACK_ARROW_BLINK_DURATION) {
+		// Hard blink for the first few seconds so attack orders read clearly.
+		const phase = unit.orderAge * ATTACK_ARROW_BLINK_HZ;
+		const on = phase % 1 < 0.55;
+		alpha = on ? MOVE_ARROW_ALPHA : 0.12;
+	}
+	return { color: ATTACK_ARROW_COLOR, alpha };
 }
 
 function drawArrow(

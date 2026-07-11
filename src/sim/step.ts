@@ -7,7 +7,7 @@ import type { MapDefinition } from "../map/types";
 import { PATH_WAYPOINT_REACH } from "../shared/config";
 import type { GameState } from "../shared/game-state";
 import type { TeamId, Vec2 } from "../shared/types";
-import type { Unit } from "../units";
+import type { OrderKind, Unit } from "../units";
 import { tickCombat, tickProjectiles } from "./combat";
 import { findPath } from "./navigation";
 import { separateUnits } from "./separation";
@@ -22,11 +22,16 @@ export function stateHasSelection(state: GameState): boolean {
 }
 
 function clearMove(unit: Unit): Unit {
-	return unit.copy({ target: null, path: [] });
+	return unit.copy({
+		target: null,
+		path: [],
+		orderKind: "move",
+		orderAge: 0,
+	});
 }
 
 /**
- * Issue a move order to `destination` for all selected units.
+ * Issue a move/attack order to `destination` for all selected units.
  * Builds a path around water; units that cannot path keep their previous order.
  */
 export function issueMoveOrder(
@@ -34,6 +39,7 @@ export function issueMoveOrder(
 	destination: Vec2,
 	map: MapDefinition,
 	radius: number,
+	orderKind: OrderKind = "move",
 ): GameState {
 	if (!hasSelection(state)) {
 		return state;
@@ -52,7 +58,12 @@ export function issueMoveOrder(
 			if (path === null || path.length === 0) {
 				return unit;
 			}
-			return unit.copy({ target: destination, path });
+			return unit.copy({
+				target: destination,
+				path,
+				orderKind,
+				orderAge: 0,
+			});
 		}),
 	};
 }
@@ -149,7 +160,7 @@ function advanceUnit(
 	if (reached) {
 		const rest = unit.path.slice(1);
 		if (rest.length === 0) {
-			return unit.copy({ position, target: null, path: [] });
+			return clearMove(unit.copy({ position }));
 		}
 		return unit.copy({ position, path: rest });
 	}
@@ -209,7 +220,13 @@ export function step(
 		return state;
 	}
 
-	const moved = state.units.map((unit) => advanceUnit(unit, map, radius, dt));
+	const moved = state.units.map((unit) => {
+		const next = advanceUnit(unit, map, radius, dt);
+		if (next.target === null) {
+			return next;
+		}
+		return next.copy({ orderAge: next.orderAge + dt });
+	});
 	const separated = separateUnits(moved, map, radius);
 
 	const combat = tickCombat(separated, state.projectiles, dt, nextProjectileId);
