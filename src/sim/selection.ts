@@ -1,4 +1,6 @@
-import type { Dot, DotId, GameState, Rect, Vec2 } from "../shared/types";
+import type { GameState } from "../shared/game-state";
+import type { DotId, Rect, Vec2 } from "../shared/types";
+import type { Unit } from "../units";
 
 type NormalizedRect = {
 	readonly left: number;
@@ -63,45 +65,54 @@ export function circleOverlapsRect(
 	return dx * dx + dy * dy <= radius * radius;
 }
 
-/** Which dots' circles fall inside / touch the marquee rect. */
-export function selectDotsInRect(
-	dots: readonly Dot[],
+/** Which units' circles fall inside / touch the marquee rect. */
+export function selectUnitsInRect(
+	units: readonly Unit[],
 	rect: Rect,
 	radius: number,
 ): ReadonlySet<DotId> {
 	const selected = new Set<DotId>();
-	for (const dot of dots) {
-		if (circleOverlapsRect(dot.position, radius, rect)) {
-			selected.add(dot.id);
+	for (const unit of units) {
+		if (circleOverlapsRect(unit.position, radius, rect)) {
+			selected.add(unit.id);
 		}
 	}
 	return selected;
 }
+
+/** @deprecated Use selectUnitsInRect. */
+export const selectDotsInRect = selectUnitsInRect;
 
 function withSelection(
 	state: GameState,
 	selectedIds: ReadonlySet<DotId>,
 ): GameState {
 	return {
-		dots: state.dots.map((dot) => ({
-			...dot,
-			selected: selectedIds.has(dot.id),
-		})),
+		...state,
+		units: state.units.map((unit) =>
+			unit.copy({ selected: selectedIds.has(unit.id) }),
+		),
 	};
 }
 
-/** Apply marquee selection flags. Positions unchanged (ready for later movement). */
+/**
+ * Apply marquee selection flags.
+ *
+ * TODO: restrict selection to the local player team once AI owns the other side.
+ * For now any team is selectable for combat testing.
+ */
 export function applyMarqueeSelection(
 	state: GameState,
 	rect: Rect,
 	radius: number,
 ): GameState {
-	return withSelection(state, selectDotsInRect(state.dots, rect, radius));
+	return withSelection(state, selectUnitsInRect(state.units, rect, radius));
 }
 
 /**
- * Click: select the closest hit circle, or clear if the point misses every dot.
- * Positions unchanged.
+ * Click: select the closest hit circle, or clear if the point misses every unit.
+ *
+ * TODO: restrict selection to the local player team once AI owns the other side.
  */
 export function applyClickSelection(
 	state: GameState,
@@ -111,14 +122,14 @@ export function applyClickSelection(
 	let bestId: DotId | null = null;
 	let bestDist = Number.POSITIVE_INFINITY;
 
-	for (const dot of state.dots) {
-		if (!pointHitsCircle(point, dot.position, radius)) {
+	for (const unit of state.units) {
+		if (!pointHitsCircle(point, unit.position, radius)) {
 			continue;
 		}
-		const dist = distanceSquared(point, dot.position);
+		const dist = distanceSquared(point, unit.position);
 		if (dist < bestDist) {
 			bestDist = dist;
-			bestId = dot.id;
+			bestId = unit.id;
 		}
 	}
 

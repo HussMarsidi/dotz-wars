@@ -6,7 +6,8 @@ import {
 	DOT_RADIUS,
 	TICK_DT,
 } from "./shared/config";
-import type { GameState, Rect } from "./shared/types";
+import type { GameState } from "./shared/game-state";
+import type { Rect } from "./shared/types";
 import { attachShortcuts } from "./shortcuts";
 import {
 	applyClickSelection,
@@ -67,10 +68,10 @@ async function main(): Promise<void> {
 		handlers: {
 			onClick: (position) => {
 				marquee = null;
-				const hitDot = current.dots.some((dot) =>
-					pointHitsCircle(position, dot.position, DOT_RADIUS),
+				const hitUnit = current.units.some((unit) =>
+					pointHitsCircle(position, unit.position, DOT_RADIUS),
 				);
-				if (!hitDot && stateHasSelection(current)) {
+				if (!hitUnit && stateHasSelection(current)) {
 					const next = issueMoveOrder(current, position, map, DOT_RADIUS);
 					previous = current;
 					current = next;

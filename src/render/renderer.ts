@@ -7,12 +7,15 @@ import {
 	BOARD_WIDTH,
 	MOVE_ARROW_ALPHA,
 	MOVE_ARROW_COLOR,
+	PROJECTILE_COLOR,
+	PROJECTILE_RADIUS,
 	SELECTION_FILL_ALPHA,
 	SELECTION_FILL_COLOR,
 	SELECTION_STROKE_COLOR,
 } from "../shared/config";
-import type { Dot, DotId, GameState, Rect, Vec2 } from "../shared/types";
-import { createDotView, syncDotView } from "./dot-view";
+import type { GameState } from "../shared/game-state";
+import type { DotId, Rect, Vec2 } from "../shared/types";
+import { createDotView, type DotView, syncDotView } from "./dot-view";
 import { createMapView } from "./map-view";
 
 export type MarqueeView = Rect | null;
@@ -32,9 +35,10 @@ export class Renderer {
 	private readonly world: Container;
 	private readonly mapLayer: Graphics;
 	private readonly dotsLayer: Container;
+	private readonly projectileGfx: Graphics;
 	private readonly arrowGfx: Graphics;
 	private readonly marqueeGfx: Graphics;
-	private readonly dotViews = new Map<DotId, Graphics>();
+	private readonly dotViews = new Map<DotId, DotView>();
 
 	private constructor(app: Application, map: MapDefinition) {
 		this.app = app;
@@ -46,10 +50,12 @@ export class Renderer {
 		this.world = new Container();
 		this.mapLayer = createMapView(map);
 		this.dotsLayer = new Container();
+		this.projectileGfx = new Graphics();
 		this.arrowGfx = new Graphics();
 		this.marqueeGfx = new Graphics();
 		this.world.addChild(this.mapLayer);
 		this.world.addChild(this.dotsLayer);
+		this.world.addChild(this.projectileGfx);
 		this.world.addChild(this.arrowGfx);
 		this.world.addChild(this.marqueeGfx);
 		app.stage.addChild(this.world);
@@ -92,40 +98,50 @@ export class Renderer {
 	sync(state: GameState, marquee: MarqueeView): void {
 		const seen = new Set<DotId>();
 
-		for (const dot of state.dots) {
-			seen.add(dot.id);
-			let view = this.dotViews.get(dot.id);
+		for (const unit of state.units) {
+			seen.add(unit.id);
+			let view = this.dotViews.get(unit.id);
 			if (view === undefined) {
-				view = createDotView(dot);
-				this.dotViews.set(dot.id, view);
-				this.dotsLayer.addChild(view);
+				view = createDotView(unit);
+				this.dotViews.set(unit.id, view);
+				this.dotsLayer.addChild(view.root);
 			} else {
-				syncDotView(view, dot);
+				syncDotView(view, unit);
 			}
 		}
 
 		for (const [id, view] of this.dotViews) {
 			if (!seen.has(id)) {
-				this.dotsLayer.removeChild(view);
-				view.destroy();
+				this.dotsLayer.removeChild(view.root);
+				view.root.destroy({ children: true });
 				this.dotViews.delete(id);
 			}
 		}
 
-		this.drawMoveArrows(state.dots);
+		this.drawProjectiles(state);
+		this.drawMoveArrows(state);
 		this.drawMarquee(marquee);
 	}
 
-	private drawMoveArrows(dots: readonly Dot[]): void {
+	private drawProjectiles(state: GameState): void {
+		this.projectileGfx.clear();
+		for (const projectile of state.projectiles) {
+			this.projectileGfx
+				.circle(projectile.position.x, projectile.position.y, PROJECTILE_RADIUS)
+				.fill(PROJECTILE_COLOR);
+		}
+	}
+
+	private drawMoveArrows(state: GameState): void {
 		this.arrowGfx.clear();
-		for (const dot of dots) {
-			if (dot.target === null) {
+		for (const unit of state.units) {
+			if (unit.target === null) {
 				continue;
 			}
 			drawArrow(
 				this.arrowGfx,
-				dot.position,
-				dot.target,
+				unit.position,
+				unit.target,
 				MOVE_ARROW_COLOR,
 				MOVE_ARROW_ALPHA,
 			);

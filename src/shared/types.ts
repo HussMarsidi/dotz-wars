@@ -2,6 +2,8 @@
 
 export type DotId = string;
 
+export type TeamId = "blue" | "red";
+
 export type Vec2 = {
 	readonly x: number;
 	readonly y: number;
@@ -15,21 +17,14 @@ export type Rect = {
 	readonly height: number;
 };
 
-export type Dot = {
-	readonly id: DotId;
-	/** World-space center. */
+/** Flying ranged attack. Homes toward `targetId` until hit or target dies. */
+export type Projectile = {
+	readonly id: string;
+	readonly teamId: TeamId;
 	readonly position: Vec2;
-	readonly selected: boolean;
-	/** World units per second. Per-dot so classes can differ later. */
+	readonly targetId: DotId;
+	readonly damage: number;
 	readonly speed: number;
-	/** Final RTS destination; null when idle. Used for move arrow. */
-	readonly target: Vec2 | null;
-	/** Remaining waypoints to `target` (may be empty when idle). */
-	readonly path: readonly Vec2[];
-};
-
-export type GameState = {
-	readonly dots: readonly Dot[];
 };
 
 /** Plain input payloads produced by the input layer. */

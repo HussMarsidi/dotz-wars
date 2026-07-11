@@ -1,19 +1,34 @@
-import { DOT_SPEED, INITIAL_DOT_POSITIONS } from "../shared/config";
-import type { Dot, GameState } from "../shared/types";
+import {
+	BLUE_SPAWN_X,
+	RED_SPAWN_X,
+	SPAWN_Y_GAP,
+	SPAWN_Y_START,
+} from "../shared/config";
+import type { GameState } from "../shared/game-state";
+import { spawnUnit, type TeamId, UNIT_LINEUP, type Unit } from "../units";
 
-export function createInitialDots(): Dot[] {
-	return INITIAL_DOT_POSITIONS.map((position, index) => ({
-		id: `dot-${index}`,
-		position,
-		selected: false,
-		speed: DOT_SPEED,
-		target: null,
-		path: [],
-	}));
+function spawnTeam(teamId: TeamId, spawnX: number): Unit[] {
+	return UNIT_LINEUP.map((kind, index) =>
+		spawnUnit(kind, `${teamId}-${kind}`, teamId, {
+			x: spawnX,
+			y: SPAWN_Y_START + index * SPAWN_Y_GAP,
+		}),
+	);
+}
+
+/**
+ * 5v5 test lineup: one of each unit kind per team.
+ *
+ * TODO: other team will be managed by AI — for now both teams are player-selectable for testing.
+ */
+export function createInitialUnits(): Unit[] {
+	return [...spawnTeam("blue", BLUE_SPAWN_X), ...spawnTeam("red", RED_SPAWN_X)];
 }
 
 export function createInitialState(): GameState {
 	return {
-		dots: createInitialDots(),
+		units: createInitialUnits(),
+		projectiles: [],
+		winner: null,
 	};
 }
