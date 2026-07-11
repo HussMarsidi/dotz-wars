@@ -13,6 +13,9 @@ export const CLICK_DRAG_THRESHOLD = 4;
 export const DOT_COLOR = 0x4fc3f7;
 export const DOT_SELECTED_COLOR = 0xffeb3b;
 
+export const LAND_COLOR = 0x4a7c3f;
+export const WATER_COLOR = 0x7ec8e3;
+
 export const SELECTION_STROKE_COLOR = 0xffffff;
 export const SELECTION_FILL_COLOR = 0xffffff;
 export const SELECTION_FILL_ALPHA = 0.15;
