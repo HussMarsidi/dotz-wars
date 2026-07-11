@@ -155,6 +155,23 @@ export function applyClickSelection(
 	return withSelection(state, new Set([hit.id]));
 }
 
+/** Select all living units matching any selected unit's kind + team. */
+export function selectAllSameType(state: GameState): GameState {
+	const selected = state.units.filter((unit) => unit.selected && unit.isAlive);
+	if (selected.length === 0) {
+		return state;
+	}
+
+	const keys = new Set(selected.map((unit) => `${unit.teamId}:${unit.kind}`));
+	const ids = new Set<DotId>();
+	for (const unit of state.units) {
+		if (unit.isAlive && keys.has(`${unit.teamId}:${unit.kind}`)) {
+			ids.add(unit.id);
+		}
+	}
+	return withSelection(state, ids);
+}
+
 /** Clear every unit's selected flag. */
 export function clearSelection(state: GameState): GameState {
 	if (!state.units.some((unit) => unit.selected)) {

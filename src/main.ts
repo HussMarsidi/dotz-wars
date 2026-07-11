@@ -21,6 +21,7 @@ import {
 	applyMarqueeSelection,
 	clearSelection,
 	findUnitAtPoint,
+	selectAllSameType,
 } from "./sim/selection";
 import { createInitialState } from "./sim/state";
 import {
@@ -91,6 +92,18 @@ async function main(): Promise<void> {
 				}
 				marquee = null;
 				const next = selectControlGroup(current, controlGroups, slot);
+				if (next === current) {
+					return;
+				}
+				previous = current;
+				current = next;
+				redraw();
+			},
+		},
+		{
+			selectAllSameType: () => {
+				marquee = null;
+				const next = selectAllSameType(current);
 				if (next === current) {
 					return;
 				}

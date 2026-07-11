@@ -26,8 +26,9 @@ const SPAWNERS: Record<
 	mage: Mage.spawn,
 };
 
-/** One of each kind — used for the 5v5 test lineup. */
+/** Test lineup: two grunts + one of each other kind (for Cmd+A same-type select). */
 export const UNIT_LINEUP: readonly UnitKind[] = [
+	"grunt",
 	"grunt",
 	"archer",
 	"tank",

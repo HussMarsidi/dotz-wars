@@ -3,13 +3,14 @@ import type { GameState } from "../shared/game-state";
 import type { Rect } from "../shared/types";
 import { emptyTerritory } from "../territory";
 import type { Unit } from "../units";
-import { Grunt } from "../units";
+import { Archer, Grunt } from "../units";
 import {
 	applyClickSelection,
 	applyMarqueeSelection,
 	circleOverlapsRect,
 	clearSelection,
 	pointHitsCircle,
+	selectAllSameType,
 	selectUnitsInRect,
 } from "./selection";
 
@@ -159,5 +160,26 @@ describe("clearSelection", () => {
 		const next = clearSelection(state);
 		expect(next.units[0]?.selected).toBe(false);
 		expect(next.units[1]?.selected).toBe(false);
+	});
+});
+
+describe("selectAllSameType", () => {
+	it("selects all living units of the same kind and team", () => {
+		const state = stateOf(
+			Grunt.spawn("g1", "blue", { x: 0, y: 0 }).copy({ selected: true }),
+			Grunt.spawn("g2", "blue", { x: 20, y: 0 }),
+			Grunt.spawn("g3", "red", { x: 40, y: 0 }),
+			Archer.spawn("a", "blue", { x: 60, y: 0 }),
+		);
+		const next = selectAllSameType(state);
+		expect(next.units.find((u) => u.id === "g1")?.selected).toBe(true);
+		expect(next.units.find((u) => u.id === "g2")?.selected).toBe(true);
+		expect(next.units.find((u) => u.id === "g3")?.selected).toBe(false);
+		expect(next.units.find((u) => u.id === "a")?.selected).toBe(false);
+	});
+
+	it("no-ops when nothing is selected", () => {
+		const state = stateOf(unit("a", 0, 0), unit("b", 20, 0));
+		expect(selectAllSameType(state)).toBe(state);
 	});
 });

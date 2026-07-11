@@ -13,7 +13,7 @@ import { spawnUnit, type TeamId, UNIT_LINEUP, type Unit } from "../units";
 
 function spawnTeam(teamId: TeamId, spawnX: number): Unit[] {
 	return UNIT_LINEUP.map((kind, index) =>
-		spawnUnit(kind, `${teamId}-${kind}`, teamId, {
+		spawnUnit(kind, `${teamId}-${kind}-${index}`, teamId, {
 			x: spawnX,
 			y: SPAWN_Y_START + index * SPAWN_Y_GAP,
 		}),
@@ -21,7 +21,7 @@ function spawnTeam(teamId: TeamId, spawnX: number): Unit[] {
 }
 
 /**
- * 5v5 test lineup: one of each unit kind per team.
+ * Test lineup per team: two grunts + one of each other kind.
  *
  * TODO: other team will be managed by AI — for now both teams are player-selectable for testing.
  */

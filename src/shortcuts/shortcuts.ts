@@ -3,6 +3,7 @@
  * Keys are lowercase `KeyboardEvent.key` values.
  *
  * Control groups (1–9): digit alone selects; Cmd/Ctrl+digit assigns.
+ * Cmd/Ctrl+A: select all units of the same type(s) as the current selection.
  */
 
 export type ShortcutAction = "setSelectMode" | "setPanMode" | "clearSelection";
@@ -26,6 +27,10 @@ export type ShortcutHandlers = {
 export type ControlGroupShortcutHandlers = {
 	readonly assignGroup: (slot: number) => void;
 	readonly selectGroup: (slot: number) => void;
+};
+
+export type ExtraShortcutHandlers = {
+	readonly selectAllSameType: () => void;
 };
 
 function isEditableTarget(target: EventTarget | null): boolean {
@@ -52,6 +57,7 @@ function parseDigitSlot(key: string): number | null {
 export function attachShortcuts(
 	handlers: ShortcutHandlers,
 	controlGroups?: ControlGroupShortcutHandlers,
+	extra?: ExtraShortcutHandlers,
 ): () => void {
 	const byKey = new Map(
 		SHORTCUT_BINDINGS.map((binding) => [binding.key, binding.action]),
@@ -73,6 +79,18 @@ export function attachShortcuts(
 			} else {
 				controlGroups.selectGroup(slot);
 			}
+			return;
+		}
+
+		if (
+			extra !== undefined &&
+			(event.metaKey || event.ctrlKey) &&
+			!event.altKey &&
+			!event.shiftKey &&
+			event.key.toLowerCase() === "a"
+		) {
+			event.preventDefault();
+			extra.selectAllSameType();
 			return;
 		}
 
