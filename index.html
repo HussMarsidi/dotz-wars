@@ -130,6 +130,103 @@
 				border-color: rgba(128, 203, 196, 0.7);
 				color: #fff;
 			}
+			.city-menu {
+				position: absolute;
+				top: 64px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 3;
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+				padding: 10px 12px;
+				border-radius: 8px;
+				background: rgba(20, 24, 18, 0.9);
+				border: 1px solid rgba(255, 255, 255, 0.14);
+				backdrop-filter: blur(6px);
+				color: #e8efe4;
+				min-width: 320px;
+				max-width: min(420px, calc(100vw - 24px));
+			}
+			.city-menu[hidden] {
+				display: none;
+			}
+			.city-menu__title {
+				font-size: 12px;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				opacity: 0.75;
+			}
+			.city-menu__status {
+				font-size: 13px;
+				font-weight: 600;
+				color: #fff59d;
+			}
+			.city-menu__subtitle {
+				font-size: 11px;
+				letter-spacing: 0.04em;
+				text-transform: uppercase;
+				opacity: 0.65;
+				margin-top: 2px;
+			}
+			.city-menu__row {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 6px;
+			}
+			.city-menu button {
+				appearance: none;
+				border: 1px solid rgba(255, 255, 255, 0.12);
+				border-radius: 6px;
+				padding: 7px 12px;
+				background: rgba(255, 255, 255, 0.04);
+				color: #e8efe4;
+				font: inherit;
+				font-size: 12px;
+				cursor: pointer;
+			}
+			.city-menu button:hover:not(:disabled) {
+				background: rgba(255, 255, 255, 0.1);
+			}
+			.city-menu button:disabled {
+				opacity: 0.35;
+				cursor: not-allowed;
+			}
+			.city-menu__queue {
+				display: flex;
+				flex-direction: column;
+				gap: 8px;
+			}
+			.city-menu__queue-empty {
+				font-size: 12px;
+				opacity: 0.55;
+			}
+			.city-menu__queue-item {
+				display: grid;
+				grid-template-columns: 1fr auto;
+				gap: 6px 8px;
+				align-items: center;
+			}
+			.city-menu__queue-label {
+				grid-column: 1;
+				font-size: 12px;
+			}
+			.city-menu__queue-bar {
+				grid-column: 1;
+				height: 6px;
+				border-radius: 3px;
+				background: rgba(255, 255, 255, 0.1);
+				overflow: hidden;
+			}
+			.city-menu__queue-bar-fill {
+				height: 100%;
+				background: #80cbc4;
+			}
+			.city-menu__queue-item > button {
+				grid-column: 2;
+				grid-row: 1 / span 2;
+				padding: 6px 10px;
+			}
 			#app[data-pointer-mode="pan"] canvas {
 				cursor: grab;
 			}

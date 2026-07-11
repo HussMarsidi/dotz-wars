@@ -1,4 +1,4 @@
-import type { City } from "../cities";
+import { type City, settleQueuesAfterCapture, tickProduction } from "../cities";
 import type { FormationRegistry } from "../formation";
 import { tickFormationMarches } from "../formation";
 import {
@@ -245,23 +245,29 @@ export function step(
 
 	const flights = tickProjectiles(combat.units, combat.projectiles, dt);
 	const afterCombat = removeDead(flights.units);
-	const cities = tickCapture(marched.cities, afterCombat, dt);
-	const sourcesForDrain = collectSources(cities, afterCombat);
-	const drained = applyTerritoryDrain(afterCombat, sourcesForDrain, dt);
+	const captured = tickCapture(marched.cities, afterCombat, dt);
+	const settled = settleQueuesAfterCapture(
+		marched.cities,
+		captured,
+		marched.gold,
+	);
+	const produced = tickProduction(settled.cities, afterCombat, dt);
+	const sourcesForDrain = collectSources(produced.cities, produced.units);
+	const drained = applyTerritoryDrain(produced.units, sourcesForDrain, dt);
 	const living = removeDead(drained);
 	const territory = computeTerritory(
 		BOARD_WIDTH,
 		BOARD_HEIGHT,
-		collectSources(cities, living),
+		collectSources(produced.cities, living),
 	);
-	const winner = checkWinner(cities);
+	const winner = checkWinner(produced.cities);
 
 	return {
 		units: living,
-		cities,
+		cities: produced.cities,
 		territory,
 		projectiles: flights.projectiles,
-		gold: marched.gold,
+		gold: settled.gold,
 		winner,
 	};
 }

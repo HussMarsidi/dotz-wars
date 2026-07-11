@@ -1,4 +1,11 @@
 import {
+	type CityId,
+	cancelProductionOrder,
+	cityById,
+	findOwnedCityAtPoint,
+	orderUnit,
+} from "./cities";
+import {
 	createFormationRegistry,
 	expandSelectionToFormations,
 	type FormationShape,
@@ -21,6 +28,7 @@ import {
 	CAMERA_ZOOM_WHEEL_FACTOR,
 	CLICK_DRAG_THRESHOLD,
 	DOT_RADIUS,
+	LOCAL_TEAM,
 	TICK_DT,
 } from "./shared/config";
 import type { GameState } from "./shared/game-state";
@@ -48,6 +56,7 @@ import {
 	stateHasSelection,
 	step,
 } from "./sim/step";
+import { mountCityMenu } from "./ui/city-menu";
 import { mountFormationMenu } from "./ui/formation-menu";
 import { mountGoldHud } from "./ui/gold-hud";
 import { mountToolbar } from "./ui/toolbar";
@@ -76,6 +85,7 @@ async function main(): Promise<void> {
 	let gesture: PointerGesture = "normal";
 	let facingDraft: FacingDraft | null = null;
 	let formationPreview: FormationPreview | null = null;
+	let selectedCityId: CityId | null = null;
 	const controlGroups = createControlGroups();
 	const formations = createFormationRegistry();
 
@@ -86,6 +96,36 @@ async function main(): Promise<void> {
 		new Set(
 			current.units.filter((unit) => unit.isAlive).map((unit) => unit.id),
 		);
+
+	const clearCitySelection = () => {
+		selectedCityId = null;
+		cityMenu.hide();
+	};
+
+	const selectCity = (cityId: CityId) => {
+		selectedCityId = cityId;
+		formationMenu.hide();
+		clearFacingDraft();
+		previous = current;
+		current = clearSelection(current);
+	};
+
+	const syncCityHud = () => {
+		if (selectedCityId === null) {
+			cityMenu.hide();
+			return;
+		}
+		const city = cityById(current.cities, selectedCityId);
+		if (city === undefined || city.teamId !== LOCAL_TEAM) {
+			clearCitySelection();
+			return;
+		}
+		cityMenu.sync({
+			visible: true,
+			city,
+			gold: current.gold,
+		});
+	};
 
 	const syncFormationHud = () => {
 		const ids = selectedUnitIds(current);
@@ -128,10 +168,15 @@ async function main(): Promise<void> {
 			controlGroupLabels(controlGroups),
 			formationPreview,
 			formations.labelsByUnit(),
+			selectedCityId,
 		);
 		goldHud.sync(viewState.gold);
 		if (gesture !== "formationFacing") {
-			syncFormationHud();
+			if (selectedCityId !== null) {
+				syncCityHud();
+			} else {
+				syncFormationHud();
+			}
 		}
 	};
 
@@ -237,6 +282,7 @@ async function main(): Promise<void> {
 	const deselectAll = () => {
 		marquee = null;
 		formationMenu.hide();
+		clearCitySelection();
 		clearFacingDraft();
 		previous = current;
 		current = clearSelection(current);
@@ -249,6 +295,37 @@ async function main(): Promise<void> {
 	});
 
 	const goldHud = mountGoldHud(host);
+
+	const cityMenu = mountCityMenu(host, {
+		onBuy: (kind) => {
+			if (selectedCityId === null) {
+				return;
+			}
+			const next = orderUnit(current, selectedCityId, kind);
+			if (next === null) {
+				return;
+			}
+			previous = current;
+			current = next;
+			redraw();
+		},
+		onCancel: (orderId) => {
+			if (selectedCityId === null) {
+				return;
+			}
+			const next = cancelProductionOrder(current, selectedCityId, orderId);
+			if (next === null) {
+				return;
+			}
+			previous = current;
+			current = next;
+			redraw();
+		},
+		onClose: () => {
+			clearCitySelection();
+			redraw();
+		},
+	});
 
 	const formationMenu = mountFormationMenu(host, {
 		onPickShape: (shape) => {
@@ -310,6 +387,7 @@ async function main(): Promise<void> {
 					return;
 				}
 				marquee = null;
+				clearCitySelection();
 				const next = selectControlGroup(current, controlGroups, slot);
 				if (next === current) {
 					return;
@@ -322,6 +400,7 @@ async function main(): Promise<void> {
 		{
 			selectAllSameType: () => {
 				marquee = null;
+				clearCitySelection();
 				const same = selectAllSameType(current);
 				const expanded = expandSelectionToFormations(
 					same,
@@ -367,6 +446,12 @@ async function main(): Promise<void> {
 				if (stateHasSelection(current)) {
 					const hit = findUnitAtPoint(current.units, position, DOT_RADIUS);
 					if (hit === null) {
+						const ownedCity = findOwnedCityAtPoint(current.cities, position);
+						if (ownedCity !== null) {
+							selectCity(ownedCity.id);
+							redraw();
+							return;
+						}
 						const formation = soleSelectedFormation(current, formations);
 						const next =
 							formation === null
@@ -403,6 +488,28 @@ async function main(): Promise<void> {
 					}
 				}
 
+				const unitHit = findUnitAtPoint(current.units, position, DOT_RADIUS);
+				if (unitHit !== null) {
+					clearCitySelection();
+					previous = current;
+					const clicked = applyClickSelection(current, position, DOT_RADIUS);
+					current = expandSelectionToFormations(
+						clicked,
+						formations,
+						new Set(selectedUnitIds(clicked)),
+					);
+					redraw();
+					return;
+				}
+
+				const ownedCity = findOwnedCityAtPoint(current.cities, position);
+				if (ownedCity !== null) {
+					selectCity(ownedCity.id);
+					redraw();
+					return;
+				}
+
+				clearCitySelection();
 				previous = current;
 				const clicked = applyClickSelection(current, position, DOT_RADIUS);
 				current = expandSelectionToFormations(
@@ -414,6 +521,7 @@ async function main(): Promise<void> {
 			},
 			onMarquee: (rect) => {
 				marquee = rect;
+				clearCitySelection();
 				previous = current;
 				const boxed = applyMarqueeSelection(current, rect, DOT_RADIUS);
 				current = expandSelectionToFormations(
@@ -425,6 +533,7 @@ async function main(): Promise<void> {
 			},
 			onMarqueeEnd: (rect) => {
 				marquee = null;
+				clearCitySelection();
 				previous = current;
 				const boxed = applyMarqueeSelection(current, rect, DOT_RADIUS);
 				current = expandSelectionToFormations(

@@ -10,6 +10,8 @@ import {
 	CITY_ZONE_STROKE_ALPHA,
 	CITY_ZONE_STROKE_COLOR,
 	CITY_ZONE_STROKE_WIDTH,
+	SELECTION_RING_COLOR,
+	SELECTION_RING_WIDTH,
 	TEAM_COLORS,
 } from "../shared/config";
 
@@ -18,6 +20,7 @@ export type CityView = {
 	readonly zone: Graphics;
 	readonly body: Graphics;
 	readonly progress: Graphics;
+	readonly selection: Graphics;
 	readonly label: Text;
 };
 
@@ -27,6 +30,7 @@ export function createCityView(city: City): CityView {
 	const zone = new Graphics();
 	const body = new Graphics();
 	const progress = new Graphics();
+	const selection = new Graphics();
 	const label = new Text({
 		text: city.label,
 		style: {
@@ -41,13 +45,18 @@ export function createCityView(city: City): CityView {
 	root.addChild(zone);
 	root.addChild(body);
 	root.addChild(progress);
+	root.addChild(selection);
 	root.addChild(label);
-	const view = { root, zone, body, progress, label };
-	syncCityView(view, city);
+	const view = { root, zone, body, progress, selection, label };
+	syncCityView(view, city, false);
 	return view;
 }
 
-export function syncCityView(view: CityView, city: City): void {
+export function syncCityView(
+	view: CityView,
+	city: City,
+	selected: boolean,
+): void {
 	const half = CITY_SIZE / 2;
 	const fill = TEAM_COLORS[city.teamId];
 
@@ -75,6 +84,22 @@ export function syncCityView(view: CityView, city: City): void {
 	);
 	if (ratio > 0) {
 		drawCaptureProgress(view.progress, ratio);
+	}
+
+	view.selection.clear();
+	if (selected) {
+		view.selection
+			.rect(
+				-CITY_CAPTURE_HALF,
+				-CITY_CAPTURE_HALF,
+				CITY_CAPTURE_HALF * 2,
+				CITY_CAPTURE_HALF * 2,
+			)
+			.stroke({
+				width: SELECTION_RING_WIDTH + 1,
+				color: SELECTION_RING_COLOR,
+				alpha: 0.95,
+			});
 	}
 
 	view.label.text = city.label;
