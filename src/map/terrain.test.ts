@@ -3,9 +3,11 @@ import { BATTLEFIELD_MAP } from "./battlefield";
 import {
 	circleFitsOnLand,
 	circleOverlapsWater,
+	getTerrainAt,
 	isWalkable,
 	isWater,
 	lastWalkableOnSegment,
+	terrainSpeedMultiplier,
 } from "./terrain";
 import type { MapDefinition } from "./types";
 
@@ -13,15 +15,72 @@ const tiny: MapDefinition = {
 	id: "tiny",
 	width: 100,
 	height: 100,
-	water: [
+	regions: [
 		{
-			kind: "ellipse",
+			terrain: "water",
+			shape: "ellipse",
 			center: { x: 50, y: 50 },
 			radiusX: 20,
 			radiusY: 10,
 		},
+		{
+			terrain: "forest",
+			shape: "ellipse",
+			center: { x: 20, y: 20 },
+			radiusX: 12,
+			radiusY: 12,
+		},
+		{
+			terrain: "mountain",
+			shape: "ellipse",
+			center: { x: 80, y: 80 },
+			radiusX: 12,
+			radiusY: 12,
+		},
 	],
 };
+
+describe("getTerrainAt / speed", () => {
+	it("defaults to land and reports overlays", () => {
+		expect(getTerrainAt(tiny, { x: 5, y: 5 })).toBe("land");
+		expect(getTerrainAt(tiny, { x: 20, y: 20 })).toBe("forest");
+		expect(getTerrainAt(tiny, { x: 80, y: 80 })).toBe("mountain");
+		expect(getTerrainAt(tiny, { x: 50, y: 50 })).toBe("water");
+	});
+
+	it("uses config multipliers", () => {
+		expect(terrainSpeedMultiplier(tiny, { x: 5, y: 5 })).toBe(1);
+		expect(terrainSpeedMultiplier(tiny, { x: 20, y: 20 })).toBe(0.7);
+		expect(terrainSpeedMultiplier(tiny, { x: 80, y: 80 })).toBe(0.45);
+		expect(terrainSpeedMultiplier(tiny, { x: 50, y: 50 })).toBe(0);
+	});
+
+	it("water wins over forest when overlapping", () => {
+		const overlap: MapDefinition = {
+			id: "overlap",
+			width: 100,
+			height: 100,
+			regions: [
+				{
+					terrain: "forest",
+					shape: "ellipse",
+					center: { x: 50, y: 50 },
+					radiusX: 30,
+					radiusY: 30,
+				},
+				{
+					terrain: "water",
+					shape: "ellipse",
+					center: { x: 50, y: 50 },
+					radiusX: 10,
+					radiusY: 10,
+				},
+			],
+		};
+		expect(getTerrainAt(overlap, { x: 50, y: 50 })).toBe("water");
+		expect(getTerrainAt(overlap, { x: 70, y: 50 })).toBe("forest");
+	});
+});
 
 describe("isWater", () => {
 	it("hits ellipse center and misses outside", () => {
@@ -33,8 +92,10 @@ describe("isWater", () => {
 });
 
 describe("isWalkable", () => {
-	it("rejects water and out-of-bounds; accepts land", () => {
-		expect(isWalkable(tiny, { x: 10, y: 10 })).toBe(true);
+	it("rejects water and out-of-bounds; accepts land/forest/mountain", () => {
+		expect(isWalkable(tiny, { x: 10, y: 50 })).toBe(true);
+		expect(isWalkable(tiny, { x: 20, y: 20 })).toBe(true);
+		expect(isWalkable(tiny, { x: 80, y: 80 })).toBe(true);
 		expect(isWalkable(tiny, { x: 50, y: 50 })).toBe(false);
 		expect(isWalkable(tiny, { x: -1, y: 10 })).toBe(false);
 		expect(isWalkable(tiny, { x: 10, y: 101 })).toBe(false);
@@ -52,7 +113,6 @@ describe("isWalkable", () => {
 
 describe("circleOverlapsWater", () => {
 	it("detects when the rim touches water", () => {
-		// Water edge at x=70; circle center at 70+10=80 with r=10 → rim on edge
 		expect(circleOverlapsWater(tiny, { x: 80, y: 50 }, 10)).toBe(true);
 		expect(circleOverlapsWater(tiny, { x: 90, y: 50 }, 10)).toBe(false);
 	});
@@ -61,7 +121,7 @@ describe("circleOverlapsWater", () => {
 describe("circleFitsOnLand / lastWalkableOnSegment", () => {
 	it("rejects circles that hang off the board", () => {
 		expect(circleFitsOnLand(tiny, { x: 5, y: 50 }, 10)).toBe(false);
-		expect(circleFitsOnLand(tiny, { x: 30, y: 30 }, 10)).toBe(true);
+		expect(circleFitsOnLand(tiny, { x: 30, y: 80 }, 10)).toBe(true);
 	});
 
 	it("returns the last land point before water on a segment", () => {

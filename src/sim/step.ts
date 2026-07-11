@@ -1,4 +1,8 @@
-import { circleFitsOnLand, lastWalkableOnSegment } from "../map/terrain";
+import {
+	circleFitsOnLand,
+	lastWalkableOnSegment,
+	terrainSpeedMultiplier,
+} from "../map/terrain";
 import type { MapDefinition } from "../map/types";
 import type { Dot, GameState, Vec2 } from "../shared/types";
 
@@ -52,7 +56,7 @@ function advanceDot(
 		return { ...dot, target: null };
 	}
 
-	const stepDist = dot.speed * dt;
+	const stepDist = dot.speed * terrainSpeedMultiplier(map, dot.position) * dt;
 	const reach = Math.min(stepDist, dist);
 	const next = {
 		x: dot.position.x + (dx / dist) * reach,

@@ -8,12 +8,20 @@ const map: MapDefinition = {
 	id: "test",
 	width: 200,
 	height: 200,
-	water: [
+	regions: [
 		{
-			kind: "ellipse",
+			terrain: "water",
+			shape: "ellipse",
 			center: { x: 150, y: 100 },
 			radiusX: 40,
 			radiusY: 40,
+		},
+		{
+			terrain: "forest",
+			shape: "ellipse",
+			center: { x: 40, y: 50 },
+			radiusX: 25,
+			radiusY: 25,
 		},
 	],
 };
@@ -62,32 +70,46 @@ describe("issueMoveOrder", () => {
 });
 
 describe("step", () => {
-	it("moves toward target at speed * dt", () => {
+	it("moves toward target at speed * dt on land", () => {
 		const state = stateOf(
 			makeDot({
 				id: "a",
-				position: { x: 0, y: 50 },
+				position: { x: 90, y: 20 },
+				speed: 100,
+				target: { x: 190, y: 20 },
+			}),
+		);
+		const next = step(state, map, RADIUS, 0.1);
+		expect(next.dots[0]?.position.x).toBeCloseTo(100);
+		expect(next.dots[0]?.position.y).toBeCloseTo(20);
+		expect(next.dots[0]?.target).toEqual({ x: 190, y: 20 });
+	});
+
+	it("slows in forest via TERRAIN_SPEED_MULTIPLIER", () => {
+		const state = stateOf(
+			makeDot({
+				id: "a",
+				position: { x: 40, y: 50 },
 				speed: 100,
 				target: { x: 100, y: 50 },
 			}),
 		);
 		const next = step(state, map, RADIUS, 0.1);
-		expect(next.dots[0]?.position.x).toBeCloseTo(10);
-		expect(next.dots[0]?.position.y).toBeCloseTo(50);
-		expect(next.dots[0]?.target).toEqual({ x: 100, y: 50 });
+		// 100 * 0.7 * 0.1 = 7
+		expect(next.dots[0]?.position.x).toBeCloseTo(47);
 	});
 
 	it("clears target on arrival", () => {
 		const state = stateOf(
 			makeDot({
 				id: "a",
-				position: { x: 50, y: 50 },
+				position: { x: 50, y: 20 },
 				speed: 100,
-				target: { x: 55, y: 50 },
+				target: { x: 55, y: 20 },
 			}),
 		);
 		const next = step(state, map, RADIUS, 0.1);
-		expect(next.dots[0]?.position).toEqual({ x: 55, y: 50 });
+		expect(next.dots[0]?.position).toEqual({ x: 55, y: 20 });
 		expect(next.dots[0]?.target).toBeNull();
 	});
 
@@ -103,7 +125,6 @@ describe("step", () => {
 		const next = step(state, map, RADIUS, 1);
 		expect(next.dots[0]?.target).toBeNull();
 		expect(next.dots[0]?.position.x).toBeLessThan(150 - 40);
-		// Still on land (circle does not overlap water)
 		expect(next.dots[0]?.position.x).toBeGreaterThan(80);
 	});
 });

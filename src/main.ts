@@ -1,13 +1,13 @@
-import { attachPointerInput } from "./input/input";
+import { attachPointerInput, type PointerMode } from "./input/input";
 import { Renderer } from "./render/renderer";
 import {
-	BOARD_HEIGHT,
-	BOARD_WIDTH,
+	CAMERA_ZOOM_WHEEL_FACTOR,
 	CLICK_DRAG_THRESHOLD,
 	DOT_RADIUS,
 	TICK_DT,
 } from "./shared/config";
 import type { GameState, Rect } from "./shared/types";
+import { attachShortcuts } from "./shortcuts";
 import {
 	applyClickSelection,
 	applyMarqueeSelection,
@@ -20,6 +20,7 @@ import {
 	stateHasSelection,
 	step,
 } from "./sim/step";
+import { mountToolbar } from "./ui/toolbar";
 
 async function main(): Promise<void> {
 	const host = document.getElementById("app");
@@ -31,6 +32,7 @@ async function main(): Promise<void> {
 	let current: GameState = previous;
 	let accumulator = 0;
 	let marquee: Rect | null = null;
+	let mode: PointerMode = "select";
 
 	const renderer = await Renderer.create(host);
 	const map = renderer.map;
@@ -41,12 +43,28 @@ async function main(): Promise<void> {
 		renderer.sync(viewState, marquee);
 	};
 
-	attachPointerInput(
-		renderer.canvas,
-		BOARD_WIDTH,
-		BOARD_HEIGHT,
-		CLICK_DRAG_THRESHOLD,
-		{
+	const setMode = (next: PointerMode) => {
+		mode = next;
+		toolbar.setMode(next);
+		renderer.canvas.style.cursor = next === "pan" ? "grab" : "default";
+	};
+
+	const toolbar = mountToolbar(host, {
+		onModeChange: setMode,
+	});
+
+	attachShortcuts({
+		setSelectMode: () => setMode("select"),
+		setPanMode: () => setMode("pan"),
+	});
+
+	attachPointerInput({
+		canvas: renderer.canvas,
+		camera: renderer.camera,
+		getMode: () => mode,
+		clickThresholdWorld: CLICK_DRAG_THRESHOLD,
+		zoomWheelFactor: CAMERA_ZOOM_WHEEL_FACTOR,
+		handlers: {
 			onClick: (position) => {
 				marquee = null;
 				const hitDot = current.dots.some((dot) =>
@@ -75,8 +93,16 @@ async function main(): Promise<void> {
 				current = applyMarqueeSelection(current, rect, DOT_RADIUS);
 				redraw();
 			},
+			onPan: (delta) => {
+				renderer.camera.panScreen(delta.x, delta.y);
+				renderer.applyCamera();
+			},
+			onZoom: (screen, factor) => {
+				renderer.camera.zoomAt(screen, factor);
+				renderer.applyCamera();
+			},
 		},
-	);
+	});
 
 	let lastTime = performance.now();
 	renderer.app.ticker.add(() => {
@@ -94,6 +120,7 @@ async function main(): Promise<void> {
 		redraw(accumulator / TICK_DT);
 	});
 
+	setMode("select");
 	redraw();
 }
 

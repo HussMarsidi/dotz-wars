@@ -1,6 +1,7 @@
 import { Application, Container, Graphics } from "pixi.js";
 import { BATTLEFIELD_MAP } from "../map/battlefield";
 import type { MapDefinition } from "../map/types";
+import { Camera } from "../shared/camera";
 import {
 	BOARD_HEIGHT,
 	BOARD_WIDTH,
@@ -26,7 +27,9 @@ export class Renderer {
 	readonly app: Application;
 	readonly canvas: HTMLCanvasElement;
 	readonly map: MapDefinition;
+	readonly camera: Camera;
 
+	private readonly world: Container;
 	private readonly mapLayer: Graphics;
 	private readonly dotsLayer: Container;
 	private readonly arrowGfx: Graphics;
@@ -37,15 +40,27 @@ export class Renderer {
 		this.app = app;
 		this.canvas = app.canvas;
 		this.map = map;
+		this.camera = new Camera();
 
+		this.world = new Container();
 		this.mapLayer = createMapView(map);
 		this.dotsLayer = new Container();
 		this.arrowGfx = new Graphics();
 		this.marqueeGfx = new Graphics();
-		app.stage.addChild(this.mapLayer);
-		app.stage.addChild(this.dotsLayer);
-		app.stage.addChild(this.arrowGfx);
-		app.stage.addChild(this.marqueeGfx);
+		this.world.addChild(this.mapLayer);
+		this.world.addChild(this.dotsLayer);
+		this.world.addChild(this.arrowGfx);
+		this.world.addChild(this.marqueeGfx);
+		app.stage.addChild(this.world);
+
+		this.camera.zoom = 0.55;
+		this.camera.centerOn(
+			{ x: BOARD_WIDTH / 2, y: BOARD_HEIGHT / 2 },
+			app.screen.width,
+			app.screen.height,
+		);
+		this.world.position.set(this.camera.x, this.camera.y);
+		this.world.scale.set(this.camera.zoom);
 	}
 
 	static async create(
@@ -54,15 +69,19 @@ export class Renderer {
 	): Promise<Renderer> {
 		const app = new Application();
 		await app.init({
-			width: BOARD_WIDTH,
-			height: BOARD_HEIGHT,
-			background: "#4a7c3f",
+			resizeTo: host,
+			background: "#1a1f16",
 			antialias: true,
 			resolution: window.devicePixelRatio || 1,
 			autoDensity: true,
 		});
 		host.appendChild(app.canvas);
 		return new Renderer(app, map);
+	}
+
+	applyCamera(): void {
+		this.world.position.set(this.camera.x, this.camera.y);
+		this.world.scale.set(this.camera.zoom);
 	}
 
 	sync(state: GameState, marquee: MarqueeView): void {
