@@ -9,6 +9,8 @@ import {
 	ATTACK_ARROW_COLOR,
 	BOARD_HEIGHT,
 	BOARD_WIDTH,
+	FOG_VISIBLE,
+	LOCAL_TEAM,
 	MOVE_ARROW_ALPHA,
 	MOVE_ARROW_COLOR,
 	PROJECTILE_COLOR,
@@ -19,13 +21,16 @@ import {
 } from "../shared/config";
 import type { GameState } from "../shared/game-state";
 import type { DotId, Rect, Vec2 } from "../shared/types";
+import { computeEncirclement } from "../territory";
 import type { Unit } from "../units";
+import { fogOf, fogTierAt } from "../vision";
 import { type CityView, createCityView, syncCityView } from "./city-view";
 import { createDotView, type DotView, syncDotView } from "./dot-view";
 import {
 	drawFormationPreview,
 	type FormationPreview,
 } from "./formation-preview";
+import { drawFog } from "./fog-view";
 import { createMapView } from "./map-view";
 import { drawTerritory } from "./territory-view";
 
@@ -54,6 +59,7 @@ export class Renderer {
 	private readonly arrowGfx: Graphics;
 	private readonly formationPreviewGfx: Graphics;
 	private readonly marqueeGfx: Graphics;
+	private readonly fogGfx: Graphics;
 	private readonly cityViews = new Map<CityId, CityView>();
 	private readonly dotViews = new Map<DotId, DotView>();
 
@@ -73,6 +79,7 @@ export class Renderer {
 		this.arrowGfx = new Graphics();
 		this.formationPreviewGfx = new Graphics();
 		this.marqueeGfx = new Graphics();
+		this.fogGfx = new Graphics();
 		this.world.addChild(this.mapLayer);
 		this.world.addChild(this.territoryGfx);
 		this.world.addChild(this.citiesLayer);
@@ -81,6 +88,7 @@ export class Renderer {
 		this.world.addChild(this.arrowGfx);
 		this.world.addChild(this.formationPreviewGfx);
 		this.world.addChild(this.marqueeGfx);
+		this.world.addChild(this.fogGfx);
 		app.stage.addChild(this.world);
 
 		this.camera.zoom = 0.55;
@@ -128,15 +136,22 @@ export class Renderer {
 	): void {
 		drawTerritory(this.territoryGfx, state.territory);
 		this.syncCities(state, selectedCityId);
+		const encircled = computeEncirclement(
+			state.territory,
+			state.cities,
+			state.units,
+		).encircledIds;
 		this.syncDots(
 			state,
 			groupLabels ?? EMPTY_GROUP_LABELS,
 			formationLabels ?? EMPTY_GROUP_LABELS,
+			encircled,
 		);
 		this.drawProjectiles(state);
 		this.drawMoveArrows(state);
 		drawFormationPreview(this.formationPreviewGfx, formationPreview);
 		this.drawMarquee(marquee);
+		drawFog(this.fogGfx, fogOf(state.fog, LOCAL_TEAM));
 	}
 
 	private syncCities(state: GameState, selectedCityId: CityId | null): void {
@@ -169,21 +184,37 @@ export class Renderer {
 		state: GameState,
 		groupLabels: ReadonlyMap<DotId, string>,
 		formationLabels: ReadonlyMap<DotId, string>,
+		encircledIds: ReadonlySet<DotId>,
 	): void {
 		const seen = new Set<DotId>();
+		const localFog = fogOf(state.fog, LOCAL_TEAM);
 
 		for (const unit of state.units) {
+			const visibleToLocal =
+				unit.teamId === LOCAL_TEAM ||
+				fogTierAt(localFog, unit.position) === FOG_VISIBLE;
+			if (!visibleToLocal) {
+				const existing = this.dotViews.get(unit.id);
+				if (existing !== undefined) {
+					this.dotsLayer.removeChild(existing.root);
+					existing.root.destroy({ children: true });
+					this.dotViews.delete(unit.id);
+				}
+				continue;
+			}
+
 			seen.add(unit.id);
 			const groupLabel = groupLabels.get(unit.id) ?? "";
 			const formationLabel = formationLabels.get(unit.id) ?? "";
+			const encircled = encircledIds.has(unit.id);
 			let view = this.dotViews.get(unit.id);
 			if (view === undefined) {
 				view = createDotView(unit);
 				this.dotViews.set(unit.id, view);
 				this.dotsLayer.addChild(view.root);
-				syncDotView(view, unit, groupLabel, formationLabel);
+				syncDotView(view, unit, groupLabel, formationLabel, encircled);
 			} else {
-				syncDotView(view, unit, groupLabel, formationLabel);
+				syncDotView(view, unit, groupLabel, formationLabel, encircled);
 			}
 		}
 

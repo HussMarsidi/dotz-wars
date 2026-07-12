@@ -16,6 +16,9 @@ import {
 	MORALE_BAR_COLOR,
 	MORALE_BAR_GAP,
 	MORALE_BAR_LOW,
+	ROUTING_TINT,
+	ENCIRCLED_RING_COLOR,
+	ENCIRCLED_RING_WIDTH,
 	SELECTION_RING_COLOR,
 	SELECTION_RING_WIDTH,
 	TEAM_COLORS,
@@ -100,15 +103,16 @@ export function syncDotView(
 	unit: Unit,
 	groupLabel = "",
 	formationLabel = "",
+	encircled = false,
 ): void {
+	const baseColor =
+		unit.state === "routing"
+			? mixColor(TEAM_COLORS[unit.teamId], ROUTING_TINT, 0.55)
+			: TEAM_COLORS[unit.teamId];
 	const fill =
 		unit.hitFlash > 0
-			? mixColor(
-					TEAM_COLORS[unit.teamId],
-					0xffffff,
-					unit.hitFlash / HIT_FLASH_DURATION,
-				)
-			: TEAM_COLORS[unit.teamId];
+			? mixColor(baseColor, 0xffffff, unit.hitFlash / HIT_FLASH_DURATION)
+			: baseColor;
 
 	const lunge = meleeLungeOffset(unit);
 
@@ -119,6 +123,18 @@ export function syncDotView(
 			width: SELECTION_RING_WIDTH,
 			color: SELECTION_RING_COLOR,
 		});
+	}
+	if (encircled) {
+		view.body.circle(lunge.x, lunge.y, DOT_RADIUS + 3).stroke({
+			width: ENCIRCLED_RING_WIDTH,
+			color: ENCIRCLED_RING_COLOR,
+			alpha: 0.9,
+		});
+	}
+	if (unit.state === "routing") {
+		view.body.alpha = 0.85;
+	} else {
+		view.body.alpha = 1;
 	}
 
 	view.fx.clear();

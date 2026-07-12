@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type { GameState } from "../shared/game-state";
 import type { Rect } from "../shared/types";
-import { emptyTerritory } from "../territory";
+import { emptyTerritory } from "../territory"
+import { createInitialFog } from "../vision";
 import type { Unit } from "../units";
 import { Archer, Grunt } from "../units";
 import {
@@ -32,6 +33,7 @@ function stateOf(...units: Unit[]): GameState {
 		projectiles: [],
 		gold: { blue: 1000, red: 1000 },
 		diplomatLockout: { blue: 0, red: 0 },
+		fog: createInitialFog(1, 1),
 		winner: null,
 	};
 }

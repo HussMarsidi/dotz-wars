@@ -2,6 +2,7 @@ import type { City } from "../cities";
 import type { TeamGold } from "../money";
 import type { TerritoryField } from "../territory";
 import type { Unit } from "../units/unit";
+import type { FogState } from "../vision";
 import type { Projectile, TeamId } from "./types";
 
 /** Seconds remaining before a team may train a replacement diplomat. */
@@ -19,6 +20,8 @@ export type GameState = {
 	readonly gold: TeamGold;
 	/** Seconds remaining before a team may train a replacement diplomat. */
 	readonly diplomatLockout: DiplomatLockout;
+	/** Per-team fog of war. */
+	readonly fog: FogState;
 	/** Set when one team owns every city. */
 	readonly winner: TeamId | null;
 };

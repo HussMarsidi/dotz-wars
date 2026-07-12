@@ -16,6 +16,7 @@ const map: MapDefinition = {
 			radiusY: 70,
 		},
 	],
+	resources: [],
 };
 
 const RADIUS = 8;

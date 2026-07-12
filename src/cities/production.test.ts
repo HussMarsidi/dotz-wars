@@ -9,6 +9,7 @@ import {
 } from "../shared/config";
 import type { GameState } from "../shared/game-state";
 import { emptyTerritory } from "../territory";
+import { createInitialFog } from "../vision";
 import { createCity } from "./city";
 import {
 	cancelProductionOrder,
@@ -31,6 +32,7 @@ function stateWithCity(
 		projectiles: [],
 		gold,
 		diplomatLockout: { blue: 0, red: 0 },
+		fog: createInitialFog(1, 1),
 		winner: null,
 	};
 }

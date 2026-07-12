@@ -3,6 +3,7 @@ import { createCity } from "../cities";
 import type { MapDefinition } from "../map/types";
 import type { GameState } from "../shared/game-state";
 import { emptyTerritory } from "../territory";
+import { createInitialFog } from "../vision";
 import type { Unit } from "../units";
 import { Archer, Grunt } from "../units";
 import { findClosestEnemy, tickCombat, tickProjectiles } from "./combat";
@@ -29,6 +30,7 @@ const map: MapDefinition = {
 			radiusY: 25,
 		},
 	],
+	resources: [],
 };
 
 const aroundWater: MapDefinition = {
@@ -44,6 +46,7 @@ const aroundWater: MapDefinition = {
 			radiusY: 70,
 		},
 	],
+	resources: [],
 };
 
 const openMap: MapDefinition = {
@@ -51,6 +54,7 @@ const openMap: MapDefinition = {
 	width: 400,
 	height: 400,
 	regions: [],
+	resources: [],
 };
 
 const RADIUS = 10;
@@ -63,6 +67,7 @@ function stateOf(...units: Unit[]): GameState {
 		projectiles: [],
 		gold: { blue: 1000, red: 1000 },
 		diplomatLockout: { blue: 0, red: 0 },
+		fog: createInitialFog(1, 1),
 		winner: null,
 	};
 }
@@ -201,6 +206,7 @@ describe("step", () => {
 			projectiles: [],
 			gold: { blue: 1000, red: 1000 },
 			diplomatLockout: { blue: 0, red: 0 },
+			fog: createInitialFog(1, 1),
 			winner: null,
 		};
 		const next = step(state, openMap, RADIUS, 0.1);

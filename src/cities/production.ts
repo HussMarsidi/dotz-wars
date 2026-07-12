@@ -17,6 +17,7 @@ import {
 	type ProductionOrder,
 	type ProductionOrderId,
 } from "./city";
+import { cityHasSupplyRoom } from "./supply";
 
 let nextOrderSeq = 1;
 let nextSpawnSeq = 1;
@@ -99,6 +100,15 @@ export function orderUnit(
 		return null;
 	}
 	if (city.queue.length >= CITY_PRODUCTION_QUEUE_CAP) {
+		return null;
+	}
+
+	// Upkeep shortfall / broke: no new production while funds are empty.
+	if (state.gold[LOCAL_TEAM] <= 0) {
+		return null;
+	}
+
+	if (!cityHasSupplyRoom(state, cityId)) {
 		return null;
 	}
 

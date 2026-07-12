@@ -7,6 +7,7 @@ import {
 	terrainSpeedMultiplier,
 } from "../map/terrain";
 import type { MapDefinition } from "../map/types";
+import { tickEconomy } from "../money";
 import {
 	BOARD_HEIGHT,
 	BOARD_WIDTH,
@@ -20,6 +21,7 @@ import {
 	computeTerritory,
 } from "../territory";
 import type { OrderKind, Unit } from "../units";
+import { tickFog } from "../vision";
 import { checkCityWinner, tickCapture } from "./capture";
 import { tickChase } from "./chase";
 import { tickCombat, tickProjectiles } from "./combat";
@@ -306,10 +308,11 @@ function runCityBehaviors(state: GameState, dt: number): GameState {
 }
 
 /**
- * Stage: passive effects — territory HP drain, morale, city healing.
+ * Stage: passive effects — territory drain, morale, heal, income/upkeep.
  */
 function applyPassiveEffects(
 	state: GameState,
+	map: MapDefinition,
 	dt: number,
 	context: TickContext,
 ): GameState {
@@ -326,9 +329,18 @@ function applyPassiveEffects(
 		context.inHealRadiusIds,
 		context.encircledIds,
 	);
+	const gold = tickEconomy(
+		state.gold,
+		state.cities,
+		afterHeal,
+		map.resources,
+		context.territory,
+		dt,
+	);
 	return {
 		...state,
 		units: afterHeal,
+		gold,
 	};
 }
 
@@ -386,7 +398,7 @@ export function step(
 		context.encircledIds,
 	);
 	const afterCities = runCityBehaviors(afterCombat, dt);
-	const afterPassives = applyPassiveEffects(afterCities, dt, context);
+	const afterPassives = applyPassiveEffects(afterCities, map, dt, context);
 	const diplomatLockout = tickDiplomatLockout(
 		unitsBeforeCombat,
 		afterPassives.units,
@@ -394,9 +406,11 @@ export function step(
 		dt,
 	);
 	const withTerritory = recomputeTerritoryField(afterPassives);
+	const fog = tickFog(withTerritory.fog, withTerritory.cities, withTerritory.units);
 	const withStates = {
 		...withTerritory,
 		diplomatLockout,
+		fog,
 		units: resolveUnitStates(withTerritory.units, moved.marchingIds),
 	};
 
@@ -423,6 +437,7 @@ export function interpolateState(
 		territory: current.territory,
 		gold: current.gold,
 		diplomatLockout: current.diplomatLockout,
+		fog: current.fog,
 		units: current.units.map((unit) => {
 			const prev = prevById.get(unit.id);
 			if (prev === undefined) {

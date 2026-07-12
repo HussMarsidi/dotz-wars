@@ -54,4 +54,20 @@ export function drawMap(gfx: Graphics, map: MapDefinition): void {
 			}
 		}
 	}
+
+	// Resource nodes + connectors (static map markers).
+	for (const resource of map.resources) {
+		gfx
+			.circle(resource.position.x, resource.position.y, 10)
+			.fill({ color: 0xc9a227, alpha: 0.9 });
+		for (const connector of resource.connectors) {
+			gfx
+				.circle(connector.x, connector.y, 5)
+				.fill({ color: 0xffe082, alpha: 0.85 });
+			gfx
+				.moveTo(resource.position.x, resource.position.y)
+				.lineTo(connector.x, connector.y)
+				.stroke({ width: 1.5, color: 0xffe082, alpha: 0.5 });
+		}
+	}
 }

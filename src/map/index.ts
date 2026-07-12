@@ -8,4 +8,5 @@ export {
 	lastWalkableOnSegment,
 	terrainSpeedMultiplier,
 } from "./terrain";
-export type { MapDefinition, TerrainKind, TerrainRegion } from "./types";
+export type { MapDefinition, ResourceNode, TerrainKind, TerrainRegion } from "./types";
+export { NO_RESOURCES } from "./types";

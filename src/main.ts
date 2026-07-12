@@ -170,7 +170,7 @@ async function main(): Promise<void> {
 			formations.labelsByUnit(),
 			selectedCityId,
 		);
-		goldHud.sync(viewState.gold);
+		goldHud.sync(viewState, renderer.map);
 		if (gesture !== "formationFacing") {
 			if (selectedCityId !== null) {
 				syncCityHud();

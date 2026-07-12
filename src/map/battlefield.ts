@@ -112,4 +112,46 @@ export const BATTLEFIELD_MAP: MapDefinition = {
 			radiusY: 80,
 		},
 	],
+	resources: [
+		{
+			id: "mid-north",
+			position: { x: 1200, y: 520 },
+			connectors: [
+				{ x: 1140, y: 480 },
+				{ x: 1260, y: 480 },
+				{ x: 1140, y: 560 },
+				{ x: 1260, y: 560 },
+			],
+		},
+		{
+			id: "mid-south",
+			position: { x: 1200, y: 1080 },
+			connectors: [
+				{ x: 1140, y: 1040 },
+				{ x: 1260, y: 1040 },
+				{ x: 1140, y: 1120 },
+				{ x: 1260, y: 1120 },
+			],
+		},
+		{
+			id: "west-gap",
+			position: { x: 780, y: 800 },
+			connectors: [
+				{ x: 720, y: 760 },
+				{ x: 840, y: 760 },
+				{ x: 720, y: 840 },
+				{ x: 840, y: 840 },
+			],
+		},
+		{
+			id: "east-gap",
+			position: { x: 1620, y: 800 },
+			connectors: [
+				{ x: 1560, y: 760 },
+				{ x: 1680, y: 760 },
+				{ x: 1560, y: 840 },
+				{ x: 1680, y: 840 },
+			],
+		},
+	],
 };

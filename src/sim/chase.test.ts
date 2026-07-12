@@ -11,6 +11,7 @@ const openMap: MapDefinition = {
 	width: 400,
 	height: 400,
 	regions: [],
+	resources: [],
 };
 
 const RADIUS = 10;

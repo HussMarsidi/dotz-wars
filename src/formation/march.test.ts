@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { MapDefinition } from "../map/types";
 import type { GameState } from "../shared/game-state";
 import { emptyTerritory } from "../territory";
+import { createInitialFog } from "../vision";
 import { Grunt, Scout, Tank } from "../units";
 import {
 	formationMinSpeed,
@@ -15,6 +16,7 @@ const openMap: MapDefinition = {
 	width: 800,
 	height: 800,
 	regions: [],
+	resources: [],
 };
 
 /** Vertical water strip — a wide line will clip it while the centroid stays on land. */
@@ -31,6 +33,7 @@ const waterStripMap: MapDefinition = {
 			radiusY: 120,
 		},
 	],
+	resources: [],
 };
 
 function stateOf(...units: GameState["units"]): GameState {
@@ -41,6 +44,7 @@ function stateOf(...units: GameState["units"]): GameState {
 		projectiles: [],
 		gold: { blue: 1000, red: 1000 },
 		diplomatLockout: { blue: 0, red: 0 },
+		fog: createInitialFog(1, 1),
 		winner: null,
 	};
 }

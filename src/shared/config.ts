@@ -143,8 +143,49 @@ export const FORMATION_BADGE_COLOR = 0x80cbc4;
 /** Local human player — buys/selects cities for this team only. */
 export const LOCAL_TEAM: TeamId = "blue";
 
-/** Starting gold per team. Income generation is out of scope for now. */
+/** Starting gold per team. */
 export const STARTING_GOLD = 1000;
+/** Gold per second per owned city. */
+export const CITY_INCOME_PER_SEC = 8;
+/** Full resource output per second (split 25% across 4 connectors). */
+export const RESOURCE_INCOME_PER_SEC = 20;
+/** Connector share of resource income (4 × 0.25). */
+export const RESOURCE_CONNECTOR_SHARE = 0.25;
+/** Max living units “assigned” to a city (nearest friendly city) + its queue. */
+export const CITY_SUPPLY_CAP = 12;
+/** Ongoing upkeep per second by kind. */
+export const UNIT_UPKEEP_PER_SEC = {
+	scout: 0.4,
+	grunt: 0.6,
+	archer: 0.8,
+	diplomat: 1.0,
+	tank: 1.2,
+} as const;
+
+/** Vision / fog (🔢 TBD). */
+export const FOG_CELL = 32;
+export const VISION_RADIUS_DEFAULT = 160;
+export const VISION_RADIUS_CITY = 200;
+export const VISION_RADIUS_BY_KIND = {
+	scout: 200,
+	grunt: 160,
+	archer: 180,
+	tank: 140,
+	diplomat: 320,
+} as const;
+export const FOG_UNEXPLORED = 0;
+export const FOG_EXPLORED = 1;
+export const FOG_VISIBLE = 2;
+/** Fog overlay colors (local player). */
+export const FOG_UNEXPLORED_COLOR = 0x0a0a0c;
+export const FOG_UNEXPLORED_ALPHA = 0.78;
+export const FOG_EXPLORED_COLOR = 0x1a1a22;
+export const FOG_EXPLORED_ALPHA = 0.42;
+
+/** Routing / encirclement render cues. */
+export const ROUTING_TINT = 0xffcc80;
+export const ENCIRCLED_RING_COLOR = 0xff9800;
+export const ENCIRCLED_RING_WIDTH = 2;
 
 /** Max concurrent production orders per city. */
 export const CITY_PRODUCTION_QUEUE_CAP = 8;

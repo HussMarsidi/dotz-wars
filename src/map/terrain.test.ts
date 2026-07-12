@@ -38,6 +38,7 @@ const tiny: MapDefinition = {
 			radiusY: 12,
 		},
 	],
+	resources: [],
 };
 
 describe("getTerrainAt / speed", () => {
@@ -76,6 +77,7 @@ describe("getTerrainAt / speed", () => {
 					radiusY: 10,
 				},
 			],
+			resources: [],
 		};
 		expect(getTerrainAt(overlap, { x: 50, y: 50 })).toBe("water");
 		expect(getTerrainAt(overlap, { x: 70, y: 50 })).toBe("forest");

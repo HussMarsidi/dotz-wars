@@ -15,9 +15,9 @@ Scope: current `src/` implementation vs your latest implementation spec.
 - [x] Step 2: Morale + Routing transitions (+ mage → diplomat)
 - [x] Step 3: Territory encirclement BFS + consequences
 - [x] Step 4: City healing radius
-- [ ] Step 5: Money + map (income, connectors, upkeep, supply gate)
-- [ ] Step 6: Vision / fog module
-- [ ] Step 7: Render / UI / shortcuts for new systems
+- [x] Step 5: Money + map (income, connectors, upkeep, supply gate)
+- [x] Step 6: Vision / fog module
+- [x] Step 7: Render / UI / shortcuts for new systems
 - [ ] Ongoing: determinism fixes, TeamId generalization, main.ts cleanup (before net)
 
 ---

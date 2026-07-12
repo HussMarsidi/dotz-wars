@@ -14,6 +14,7 @@ import {
 } from "../shared/game-state";
 import { collectSources, computeTerritory } from "../territory";
 import { spawnUnit, type TeamId, UNIT_LINEUP, type Unit } from "../units";
+import { createInitialFog, tickFog } from "../vision";
 
 function spawnTeam(teamId: TeamId, spawnX: number): Unit[] {
 	return UNIT_LINEUP.map((kind, index) =>
@@ -36,17 +37,24 @@ export function createInitialUnits(): Unit[] {
 export function createInitialState(): GameState {
 	const units = createInitialUnits();
 	const cities = createInitialCities();
+	const territory = computeTerritory(
+		BOARD_WIDTH,
+		BOARD_HEIGHT,
+		collectSources(cities, units),
+	);
+	const fog = tickFog(
+		createInitialFog(BOARD_WIDTH, BOARD_HEIGHT),
+		cities,
+		units,
+	);
 	return {
 		units,
 		cities,
-		territory: computeTerritory(
-			BOARD_WIDTH,
-			BOARD_HEIGHT,
-			collectSources(cities, units),
-		),
+		territory,
 		projectiles: [],
 		gold: createInitialGold(),
 		diplomatLockout: createInitialDiplomatLockout(),
+		fog,
 		winner: null,
 	};
 }

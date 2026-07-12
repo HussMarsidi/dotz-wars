@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { GameState } from "../shared/game-state";
-import { emptyTerritory } from "../territory";
+import { emptyTerritory } from "../territory"
+import { createInitialFog } from "../vision";
 import { Grunt } from "../units";
 import {
 	assignControlGroup,
@@ -18,6 +19,7 @@ function stateOf(...units: ReturnType<typeof Grunt.spawn>[]): GameState {
 		projectiles: [],
 		gold: { blue: 1000, red: 1000 },
 		diplomatLockout: { blue: 0, red: 0 },
+		fog: createInitialFog(1, 1),
 		winner: null,
 	};
 }
