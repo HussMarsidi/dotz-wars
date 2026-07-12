@@ -1,3 +1,4 @@
+import { collectInHealRadius } from "../cities";
 import type { GameState } from "../shared/game-state";
 import type { DotId } from "../shared/types";
 import {
@@ -8,17 +9,14 @@ import {
 
 /**
  * Shared per-tick context, computed once at the start of `step`.
- * Heal / vision sets stay empty until Steps 4 / 6.
  */
 export type TickContext = {
 	readonly territory: TerritoryField;
 	readonly encircledIds: ReadonlySet<DotId>;
 	readonly encirclement: EncirclementResult;
-	/** Units inside a friendly city's heal radius (Step 4). */
+	/** Units inside a friendly city's geometric heal radius. */
 	readonly inHealRadiusIds: ReadonlySet<DotId>;
 };
-
-const EMPTY_IDS: ReadonlySet<DotId> = new Set();
 
 /** Build shared context for this tick from the latest ownership field. */
 export function computeSharedContext(state: GameState): TickContext {
@@ -31,6 +29,6 @@ export function computeSharedContext(state: GameState): TickContext {
 		territory: state.territory,
 		encircledIds: encirclement.encircledIds,
 		encirclement,
-		inHealRadiusIds: EMPTY_IDS,
+		inHealRadiusIds: collectInHealRadius(state.cities, state.units),
 	};
 }

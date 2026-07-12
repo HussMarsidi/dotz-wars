@@ -1,4 +1,4 @@
-import { type City, settleQueuesAfterCapture, tickProduction } from "../cities";
+import { type City, settleQueuesAfterCapture, tickHealing, tickProduction } from "../cities";
 import type { FormationRegistry } from "../formation";
 import { tickFormationMarches } from "../formation";
 import {
@@ -306,8 +306,7 @@ function runCityBehaviors(state: GameState, dt: number): GameState {
 }
 
 /**
- * Stage: passive effects — territory HP drain + morale (regen / encircle drain).
- * Heal / upkeep hook here in later steps.
+ * Stage: passive effects — territory HP drain, morale, city healing.
  */
 function applyPassiveEffects(
 	state: GameState,
@@ -321,9 +320,15 @@ function applyPassiveEffects(
 		dt,
 		context.encircledIds,
 	);
+	const afterHeal = tickHealing(
+		afterMorale,
+		dt,
+		context.inHealRadiusIds,
+		context.encircledIds,
+	);
 	return {
 		...state,
-		units: afterMorale,
+		units: afterHeal,
 	};
 }
 

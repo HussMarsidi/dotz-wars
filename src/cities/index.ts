@@ -7,6 +7,7 @@ export {
 	type ProductionOrder,
 	type ProductionOrderId,
 } from "./city";
+export { collectInHealRadius, tickHealing } from "./heal";
 export {
 	cancelProductionOrder,
 	orderProgress,

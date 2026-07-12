@@ -189,6 +189,13 @@ export const ENCIRCLED_INCOMING_DAMAGE_MULT = 1.35;
 
 /** City body square side length (world units). */
 export const CITY_SIZE = 48;
+/**
+ * Friendly heal aura radius (world units). Geometric — not influence-based.
+ * Contested fringe still heals if team owns the city.
+ */
+export const CITY_HEAL_RADIUS = 110;
+/** HP restored per second while inside a friendly heal aura (and not encircled). */
+export const CITY_HEAL_HP_PER_SEC = 18;
 /** Half-extent of the always-visible capture box around a city. */
 export const CITY_CAPTURE_HALF = 100;
 /** Seconds an enemy must hold an undefended city to flip ownership. */
