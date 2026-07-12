@@ -100,6 +100,7 @@ type DamageEvent = {
 function applyDamageEvents(
 	units: readonly Unit[],
 	events: readonly DamageEvent[],
+	encircledIds: ReadonlySet<DotId>,
 ): readonly Unit[] {
 	if (events.length === 0) {
 		return units;
@@ -108,7 +109,11 @@ function applyDamageEvents(
 		let current = unit;
 		for (const event of events) {
 			if (event.targetId === current.id) {
-				current = current.receiveHit(event.rawDamage, event.combatMode);
+				current = current.receiveHit(
+					event.rawDamage,
+					event.combatMode,
+					encircledIds.has(current.id),
+				);
 			}
 		}
 		return current;
@@ -125,6 +130,7 @@ export function tickCombat(
 	projectiles: readonly Projectile[],
 	dt: number,
 	nextProjectileId: number,
+	encircledIds: ReadonlySet<DotId> = new Set(),
 ): CombatTickResult {
 	const living = units.filter((unit) => unit.isAlive);
 	const meleeHits: DamageEvent[] = [];
@@ -187,7 +193,7 @@ export function tickCombat(
 	});
 
 	return {
-		units: applyDamageEvents(afterTimers, meleeHits),
+		units: applyDamageEvents(afterTimers, meleeHits, encircledIds),
 		projectiles: [...projectiles, ...spawned],
 		nextProjectileId: projectileSeq,
 	};
@@ -203,6 +209,7 @@ export function tickProjectiles(
 	units: readonly Unit[],
 	projectiles: readonly Projectile[],
 	dt: number,
+	encircledIds: ReadonlySet<DotId> = new Set(),
 ): ProjectileTickResult {
 	const byId = new Map<DotId, Unit>(units.map((unit) => [unit.id, unit]));
 	const remaining: Projectile[] = [];
@@ -248,7 +255,7 @@ export function tickProjectiles(
 	}
 
 	return {
-		units: applyDamageEvents(units, hits),
+		units: applyDamageEvents(units, hits, encircledIds),
 		projectiles: remaining,
 	};
 }

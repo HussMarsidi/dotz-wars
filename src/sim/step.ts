@@ -212,12 +212,15 @@ function runMovementBehaviors(
 	radius: number,
 	dt: number,
 	formations: FormationRegistry | undefined,
+	context: TickContext,
 ): { readonly state: GameState; readonly marchingIds: ReadonlySet<DotId> } {
 	const routedUnits = ensureRoutingFleePaths(
 		state.units,
 		state.cities,
 		map,
 		radius,
+		context.territory,
+		context.encirclement,
 		formations,
 	);
 	const chasedUnits = tickChase(routedUnits, map, radius, formations);
@@ -265,16 +268,23 @@ function runMovementBehaviors(
 function runCombatBehaviors(
 	state: GameState,
 	dt: number,
+	encircledIds: ReadonlySet<DotId>,
 ): GameState {
 	const combat = tickCombat(
 		state.units,
 		state.projectiles,
 		dt,
 		nextProjectileId,
+		encircledIds,
 	);
 	nextProjectileId = combat.nextProjectileId;
 
-	const flights = tickProjectiles(combat.units, combat.projectiles, dt);
+	const flights = tickProjectiles(
+		combat.units,
+		combat.projectiles,
+		dt,
+		encircledIds,
+	);
 	return {
 		...state,
 		units: removeDead(flights.units),
@@ -296,18 +306,21 @@ function runCityBehaviors(state: GameState, dt: number): GameState {
 }
 
 /**
- * Stage: passive effects — territory HP drain + morale drain/regen.
+ * Stage: passive effects — territory HP drain + morale (regen / encircle drain).
  * Heal / upkeep hook here in later steps.
- * `_context` reserved so Steps 3–4 can gate passives without reshaping step().
  */
 function applyPassiveEffects(
 	state: GameState,
 	dt: number,
-	_context: TickContext,
+	context: TickContext,
 ): GameState {
 	const sourcesForDrain = collectSources(state.cities, state.units);
 	const drained = applyTerritoryDrain(state.units, sourcesForDrain, dt);
-	const afterMorale = tickMorale(removeDead(drained), dt);
+	const afterMorale = tickMorale(
+		removeDead(drained),
+		dt,
+		context.encircledIds,
+	);
 	return {
 		...state,
 		units: afterMorale,
@@ -354,8 +367,19 @@ export function step(
 	const context = computeSharedContext(state);
 	const unitsBeforeCombat = state.units;
 
-	const moved = runMovementBehaviors(state, map, radius, dt, formations);
-	const afterCombat = runCombatBehaviors(moved.state, dt);
+	const moved = runMovementBehaviors(
+		state,
+		map,
+		radius,
+		dt,
+		formations,
+		context,
+	);
+	const afterCombat = runCombatBehaviors(
+		moved.state,
+		dt,
+		context.encircledIds,
+	);
 	const afterCities = runCityBehaviors(afterCombat, dt);
 	const afterPassives = applyPassiveEffects(afterCities, dt, context);
 	const diplomatLockout = tickDiplomatLockout(

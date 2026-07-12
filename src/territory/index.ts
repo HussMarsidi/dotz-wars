@@ -1,5 +1,14 @@
 export { applyTerritoryDrain, buddyDrainMultiplier } from "./drain";
 export {
+	bfsPathHome,
+	BFS_SEED,
+	BFS_UNREACHED,
+	computeEncirclement,
+	computeTeamConnectivity,
+	nearestReachedCellCenter,
+} from "./encirclement";
+export type { EncirclementResult, TeamConnectivity } from "./encirclement";
+export {
 	computeTerritory,
 	emptyTerritory,
 	influenceAt,

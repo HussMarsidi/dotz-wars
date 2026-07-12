@@ -175,15 +175,17 @@ export const DIPLOMAT_REPLACEMENT_LOCKOUT = 300;
 /**
  * Morale (🔢 TBD — playtest).
  * Combat drain = incoming hits only (`receiveHit` HP/morale split).
- * `MORALE_DRAIN_PER_SEC` reserved for encirclement idle-drain (Step 3).
+ * Encircled units also idle-drain via `MORALE_DRAIN_PER_SEC`.
  * At 0 the unit enters Routing; exits when morale recovers past the exit threshold.
  */
 export const UNIT_MAX_MORALE = 100;
-/** Reserved for encirclement idle drain (Step 3) — not used for “in combat” self-drain. */
+/** Idle morale drain per second while encircled (own ground cut off from cities). */
 export const MORALE_DRAIN_PER_SEC = 25;
 export const MORALE_REGEN_PER_SEC = 15;
 /** Must regen to this before Routing ends (🔢 TBD — >0 alone exits too fast while fleeing). */
 export const MORALE_ROUTING_EXIT = 40;
+/** Extra incoming damage multiplier while encircled and fighting. */
+export const ENCIRCLED_INCOMING_DAMAGE_MULT = 1.35;
 
 /** City body square side length (world units). */
 export const CITY_SIZE = 48;

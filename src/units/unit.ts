@@ -1,4 +1,5 @@
 import {
+	ENCIRCLED_INCOMING_DAMAGE_MULT,
 	HIT_FLASH_DURATION,
 	MELEE_HP_DAMAGE_MULT,
 	MELEE_MORALE_DAMAGE_MULT,
@@ -129,8 +130,13 @@ export abstract class Unit {
 
 	/**
 	 * Apply a hit. Melee softer on HP; ranged mostly chips morale.
+	 * Encircled units take an incoming-damage penalty on HP (not morale).
 	 */
-	receiveHit(rawDamage: number, combatMode: CombatMode = "melee"): Unit {
+	receiveHit(
+		rawDamage: number,
+		combatMode: CombatMode = "melee",
+		encircled = false,
+	): Unit {
 		const dealt = this.incomingDamage(rawDamage);
 		let hpMult: number;
 		let moraleMult: number;
@@ -147,6 +153,10 @@ export abstract class Unit {
 				const _exhaustive: never = combatMode;
 				return _exhaustive;
 			}
+		}
+
+		if (encircled) {
+			hpMult *= ENCIRCLED_INCOMING_DAMAGE_MULT;
 		}
 
 		const hpLoss = Math.max(1, Math.round(dealt * hpMult));

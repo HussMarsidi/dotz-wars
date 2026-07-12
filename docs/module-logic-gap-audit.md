@@ -13,7 +13,7 @@ Scope: current `src/` implementation vs your latest implementation spec.
 
 - [x] Step 1: Sim tick reshape (Idle/Marching/Fighting/Routing field + shared context stubs; behavior-preserving)
 - [x] Step 2: Morale + Routing transitions (+ mage → diplomat)
-- [ ] Step 3: Territory encirclement BFS + consequences
+- [x] Step 3: Territory encirclement BFS + consequences
 - [ ] Step 4: City healing radius
 - [ ] Step 5: Money + map (income, connectors, upkeep, supply gate)
 - [ ] Step 6: Vision / fog module
