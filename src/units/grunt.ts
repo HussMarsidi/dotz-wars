@@ -23,6 +23,7 @@ export class Grunt extends Unit {
 			position,
 			selected: false,
 			hp: 100,
+			state: "idle",
 			target: null,
 			path: [],
 			orderKind: "move",

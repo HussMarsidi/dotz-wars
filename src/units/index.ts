@@ -12,7 +12,13 @@ export { Grunt } from "./grunt";
 export { Mage } from "./mage";
 export { Scout } from "./scout";
 export { Tank } from "./tank";
-export type { CombatMode, OrderKind, UnitFields, UnitKind } from "./unit";
+export type {
+	CombatMode,
+	OrderKind,
+	UnitFields,
+	UnitKind,
+	UnitState,
+} from "./unit";
 export { Unit } from "./unit";
 
 const SPAWNERS: Record<

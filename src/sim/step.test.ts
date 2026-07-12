@@ -143,6 +143,40 @@ describe("step", () => {
 		expect(next.units[0]?.path).toEqual([]);
 	});
 
+	it("stamps idle/marching/fighting from post-tick positions", () => {
+		const idle = step(
+			stateOf(Grunt.spawn("a", "blue", { x: 50, y: 50 })),
+			openMap,
+			RADIUS,
+			0.1,
+		);
+		expect(idle.units[0]?.state).toBe("idle");
+
+		const marching = step(
+			stateOf(
+				Grunt.spawn("a", "blue", { x: 50, y: 50 }).copy({
+					target: { x: 200, y: 50 },
+					path: [{ x: 200, y: 50 }],
+				}),
+			),
+			openMap,
+			RADIUS,
+			0.1,
+		);
+		expect(marching.units[0]?.state).toBe("marching");
+
+		const fighting = step(
+			stateOf(
+				Grunt.spawn("a", "blue", { x: 50, y: 50 }),
+				Grunt.spawn("b", "red", { x: 60, y: 50 }),
+			),
+			openMap,
+			RADIUS,
+			0.1,
+		);
+		expect(fighting.units.find((u) => u.id === "a")?.state).toBe("fighting");
+	});
+
 	it("advances through waypoints", () => {
 		const state = stateOf(
 			Grunt.spawn("a", "blue", { x: 50, y: 20 }).copy({

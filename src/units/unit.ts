@@ -10,6 +10,12 @@ export type UnitKind = "grunt" | "archer" | "tank" | "scout" | "mage";
 /** Ground click vs enemy click — drives move-arrow color. */
 export type OrderKind = "move" | "attack";
 
+/**
+ * Per-tick combat/movement state machine.
+ * `routing` is reserved — never entered until morale lands (Step 2).
+ */
+export type UnitState = "idle" | "marching" | "fighting" | "routing";
+
 /** Mutable fields shared by every unit copy. */
 export type UnitFields = {
 	readonly id: DotId;
@@ -17,6 +23,8 @@ export type UnitFields = {
 	readonly position: Vec2;
 	readonly selected: boolean;
 	readonly hp: number;
+	/** Idle / marching / fighting / routing (routing unused until Step 2). */
+	readonly state: UnitState;
 	/** Final RTS destination; null when idle. */
 	readonly target: Vec2 | null;
 	/** Remaining waypoints to `target`. */
@@ -46,6 +54,7 @@ export abstract class Unit {
 	readonly position: Vec2;
 	readonly selected: boolean;
 	readonly hp: number;
+	readonly state: UnitState;
 	readonly target: Vec2 | null;
 	readonly path: readonly Vec2[];
 	readonly orderKind: OrderKind;
@@ -61,6 +70,7 @@ export abstract class Unit {
 		this.position = fields.position;
 		this.selected = fields.selected;
 		this.hp = fields.hp;
+		this.state = fields.state;
 		this.target = fields.target;
 		this.path = fields.path;
 		this.orderKind = fields.orderKind;
@@ -111,6 +121,7 @@ export abstract class Unit {
 			position: partial.position ?? this.position,
 			selected: partial.selected ?? this.selected,
 			hp: partial.hp ?? this.hp,
+			state: partial.state ?? this.state,
 			target: partial.target !== undefined ? partial.target : this.target,
 			path: partial.path ?? this.path,
 			orderKind: partial.orderKind ?? this.orderKind,

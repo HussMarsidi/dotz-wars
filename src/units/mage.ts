@@ -23,6 +23,7 @@ export class Mage extends Unit {
 			position,
 			selected: false,
 			hp: 60,
+			state: "idle",
 			target: null,
 			path: [],
 			orderKind: "move",
