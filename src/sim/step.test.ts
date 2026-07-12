@@ -78,13 +78,21 @@ describe("issueMoveOrder", () => {
 		expect(next.units[1]?.target).toBeNull();
 	});
 
-	it("ignores orders into water", () => {
+	it("snaps a water destination to nearby land instead of ignoring the order", () => {
 		const state = stateOf(
 			Grunt.spawn("a", "blue", { x: 50, y: 50 }).copy({ selected: true }),
 		);
 		const next = issueMoveOrder(state, { x: 150, y: 100 }, map, RADIUS);
-		expect(next.units[0]?.target).toBeNull();
-		expect(next.units[0]?.path).toEqual([]);
+		const unit = next.units[0];
+		expect(unit?.target).not.toBeNull();
+		expect(unit?.path.length).toBeGreaterThan(0);
+		// Water ellipse center is (150, 100) r=40 — snapped goal must sit outside it.
+		const target = unit?.target;
+		expect(target).toBeDefined();
+		if (target === undefined) {
+			return;
+		}
+		expect(Math.hypot(target.x - 150, target.y - 100)).toBeGreaterThan(40);
 	});
 
 	it("paths around water instead of a straight line through it", () => {
