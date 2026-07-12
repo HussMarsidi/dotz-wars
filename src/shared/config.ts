@@ -85,6 +85,20 @@ export const HP_BAR_BG = 0x1a1a1a;
 export const HP_BAR_HIGH = 0x66bb6a;
 export const HP_BAR_MID = 0xffca28;
 export const HP_BAR_LOW = 0xef5350;
+/** Gap between HP bar and morale bar (world px). */
+export const MORALE_BAR_GAP = 1;
+export const MORALE_BAR_COLOR = 0x4fc3f7;
+export const MORALE_BAR_LOW = 0x0288d1;
+
+/**
+ * Hit split after defense (🔢 TBD).
+ * Melee: softer HP so fights last; light morale chip.
+ * Ranged: most of the hit goes to morale — arrows break will, not bodies.
+ */
+export const MELEE_HP_DAMAGE_MULT = 0.55;
+export const MELEE_MORALE_DAMAGE_MULT = 0.35;
+export const RANGED_HP_DAMAGE_MULT = 0.2;
+export const RANGED_MORALE_DAMAGE_MULT = 1.25;
 
 export const UNIT_LABEL_COLOR = 0xffffff;
 export const MELEE_SLASH_COLOR = 0xffffff;

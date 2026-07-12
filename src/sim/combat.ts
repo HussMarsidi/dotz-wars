@@ -1,6 +1,6 @@
 import { ATTACK_ANIM_DURATION, PROJECTILE_HIT_RADIUS } from "../shared/config";
 import type { DotId, Projectile, Vec2 } from "../shared/types";
-import type { Unit } from "../units";
+import type { CombatMode, Unit } from "../units";
 
 function distanceSquared(a: Vec2, b: Vec2): number {
 	const dx = a.x - b.x;
@@ -94,6 +94,7 @@ export type CombatTickResult = {
 type DamageEvent = {
 	readonly targetId: DotId;
 	readonly rawDamage: number;
+	readonly combatMode: CombatMode;
 };
 
 function applyDamageEvents(
@@ -107,7 +108,7 @@ function applyDamageEvents(
 		let current = unit;
 		for (const event of events) {
 			if (event.targetId === current.id) {
-				current = current.receiveHit(event.rawDamage);
+				current = current.receiveHit(event.rawDamage, event.combatMode);
 			}
 		}
 		return current;
@@ -152,7 +153,11 @@ export function tickCombat(
 		const attackDir = directionToward(unit.position, enemy.position);
 
 		if (unit.combatMode === "melee") {
-			meleeHits.push({ targetId: enemy.id, rawDamage: unit.damage });
+			meleeHits.push({
+				targetId: enemy.id,
+				rawDamage: unit.damage,
+				combatMode: "melee",
+			});
 			return unit.copy({
 				attackTimer: unit.attackCooldown,
 				attackAnim: ATTACK_ANIM_DURATION,
@@ -193,7 +198,7 @@ export type ProjectileTickResult = {
 	readonly projectiles: readonly Projectile[];
 };
 
-/** Advance projectiles toward their target; apply damage on hit. */
+/** Advance projectiles toward their target; apply ranged HP/morale split on hit. */
 export function tickProjectiles(
 	units: readonly Unit[],
 	projectiles: readonly Projectile[],
@@ -215,7 +220,11 @@ export function tickProjectiles(
 		const step = projectile.speed * dt;
 
 		if (dist <= PROJECTILE_HIT_RADIUS || step >= dist) {
-			hits.push({ targetId: target.id, rawDamage: projectile.damage });
+			hits.push({
+				targetId: target.id,
+				rawDamage: projectile.damage,
+				combatMode: "ranged",
+			});
 			continue;
 		}
 
@@ -227,7 +236,11 @@ export function tickProjectiles(
 			distanceSquared(nextPos, target.position) <=
 			PROJECTILE_HIT_RADIUS ** 2
 		) {
-			hits.push({ targetId: target.id, rawDamage: projectile.damage });
+			hits.push({
+				targetId: target.id,
+				rawDamage: projectile.damage,
+				combatMode: "ranged",
+			});
 			continue;
 		}
 

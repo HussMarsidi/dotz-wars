@@ -1,4 +1,11 @@
-import { HIT_FLASH_DURATION, UNIT_MAX_MORALE } from "../shared/config";
+import {
+	HIT_FLASH_DURATION,
+	MELEE_HP_DAMAGE_MULT,
+	MELEE_MORALE_DAMAGE_MULT,
+	RANGED_HP_DAMAGE_MULT,
+	RANGED_MORALE_DAMAGE_MULT,
+	UNIT_MAX_MORALE,
+} from "../shared/config";
 import type { DotId, TeamId, Vec2 } from "../shared/types";
 
 export type { TeamId };
@@ -115,15 +122,39 @@ export abstract class Unit {
 		return this.hp > 0;
 	}
 
-	/** Simple formula: at least 1 damage after defense. */
+	/** Simple formula: at least 1 HP after defense (before mode mult). */
 	incomingDamage(rawDamage: number): number {
 		return Math.max(1, rawDamage - this.defense);
 	}
 
-	receiveHit(rawDamage: number): Unit {
+	/**
+	 * Apply a hit. Melee softer on HP; ranged mostly chips morale.
+	 */
+	receiveHit(rawDamage: number, combatMode: CombatMode = "melee"): Unit {
 		const dealt = this.incomingDamage(rawDamage);
+		let hpMult: number;
+		let moraleMult: number;
+		switch (combatMode) {
+			case "melee":
+				hpMult = MELEE_HP_DAMAGE_MULT;
+				moraleMult = MELEE_MORALE_DAMAGE_MULT;
+				break;
+			case "ranged":
+				hpMult = RANGED_HP_DAMAGE_MULT;
+				moraleMult = RANGED_MORALE_DAMAGE_MULT;
+				break;
+			default: {
+				const _exhaustive: never = combatMode;
+				return _exhaustive;
+			}
+		}
+
+		const hpLoss = Math.max(1, Math.round(dealt * hpMult));
+		const moraleLoss = dealt * moraleMult;
+
 		return this.copy({
-			hp: Math.max(0, this.hp - dealt),
+			hp: Math.max(0, this.hp - hpLoss),
+			morale: Math.max(0, this.morale - moraleLoss),
 			hitFlash: Math.max(this.hitFlash, HIT_FLASH_DURATION),
 		});
 	}

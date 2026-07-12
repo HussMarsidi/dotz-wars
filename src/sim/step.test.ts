@@ -256,12 +256,14 @@ describe("combat", () => {
 		expect(findClosestEnemy(attacker, [attacker, near, far], 50)?.id).toBe("b");
 	});
 
-	it("melee damages closest enemy with max(1, dmg - def)", () => {
+	it("melee deals reduced HP and chips morale", () => {
 		const blue = Grunt.spawn("a", "blue", { x: 0, y: 0 });
 		const red = Grunt.spawn("b", "red", { x: 20, y: 0 });
 		const result = tickCombat([blue, red], [], 0.1, 1);
-		// grunt dmg 12 - def 3 = 9
-		expect(result.units.find((u) => u.id === "b")?.hp).toBe(red.maxHp - 9);
+		// grunt dmg 12 - def 3 = 9 → HP floor(round(9*0.55))=5, morale 9*0.35
+		const hit = result.units.find((u) => u.id === "b");
+		expect(hit?.hp).toBe(red.maxHp - 5);
+		expect(hit?.morale).toBeCloseTo(red.maxMorale - 9 * 0.35);
 		expect(result.units.find((u) => u.id === "a")?.attackTimer).toBe(
 			blue.attackCooldown,
 		);
@@ -276,7 +278,7 @@ describe("combat", () => {
 		expect(result.units.find((u) => u.id === "b")?.hp).toBe(red.maxHp);
 	});
 
-	it("projectile applies damage on hit", () => {
+	it("projectile hits HP lightly and morale heavily", () => {
 		const red = Grunt.spawn("b", "red", { x: 50, y: 0 });
 		const result = tickProjectiles(
 			[red],
@@ -292,8 +294,10 @@ describe("combat", () => {
 			],
 			0.1,
 		);
+		// dealt = max(1, 10-3)=7 → HP round(7*0.2)=1, morale 7*1.25
 		expect(result.projectiles).toHaveLength(0);
-		expect(result.units[0]?.hp).toBe(red.maxHp - Math.max(1, 10 - red.defense));
+		expect(result.units[0]?.hp).toBe(red.maxHp - 1);
+		expect(result.units[0]?.morale).toBeCloseTo(red.maxMorale - 7 * 1.25);
 	});
 });
 

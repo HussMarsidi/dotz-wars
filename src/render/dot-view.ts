@@ -13,6 +13,9 @@ import {
 	HP_BAR_WIDTH,
 	MELEE_LUNGE_DISTANCE,
 	MELEE_SLASH_COLOR,
+	MORALE_BAR_COLOR,
+	MORALE_BAR_GAP,
+	MORALE_BAR_LOW,
 	SELECTION_RING_COLOR,
 	SELECTION_RING_WIDTH,
 	TEAM_COLORS,
@@ -199,14 +202,25 @@ function drawMeleeSlash(
 
 function drawHpBar(gfx: Graphics, unit: Unit): void {
 	gfx.clear();
-	const ratio = Math.max(0, Math.min(1, unit.hp / unit.maxHp));
 	const x = -HP_BAR_WIDTH / 2;
-	const y = HP_BAR_OFFSET_Y;
-	gfx.rect(x, y, HP_BAR_WIDTH, HP_BAR_HEIGHT).fill(HP_BAR_BG);
-	const fill =
-		ratio > 0.5 ? HP_BAR_HIGH : ratio > 0.25 ? HP_BAR_MID : HP_BAR_LOW;
-	if (ratio > 0) {
-		gfx.rect(x, y, HP_BAR_WIDTH * ratio, HP_BAR_HEIGHT).fill(fill);
+	const hpY = HP_BAR_OFFSET_Y;
+	const moraleY = hpY + HP_BAR_HEIGHT + MORALE_BAR_GAP;
+
+	const hpRatio = Math.max(0, Math.min(1, unit.hp / unit.maxHp));
+	gfx.rect(x, hpY, HP_BAR_WIDTH, HP_BAR_HEIGHT).fill(HP_BAR_BG);
+	const hpFill =
+		hpRatio > 0.5 ? HP_BAR_HIGH : hpRatio > 0.25 ? HP_BAR_MID : HP_BAR_LOW;
+	if (hpRatio > 0) {
+		gfx.rect(x, hpY, HP_BAR_WIDTH * hpRatio, HP_BAR_HEIGHT).fill(hpFill);
+	}
+
+	const moraleRatio = Math.max(0, Math.min(1, unit.morale / unit.maxMorale));
+	gfx.rect(x, moraleY, HP_BAR_WIDTH, HP_BAR_HEIGHT).fill(HP_BAR_BG);
+	const moraleFill = moraleRatio > 0.35 ? MORALE_BAR_COLOR : MORALE_BAR_LOW;
+	if (moraleRatio > 0) {
+		gfx
+			.rect(x, moraleY, HP_BAR_WIDTH * moraleRatio, HP_BAR_HEIGHT)
+			.fill(moraleFill);
 	}
 }
 
