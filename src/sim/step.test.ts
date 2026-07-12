@@ -78,13 +78,21 @@ describe("issueMoveOrder", () => {
 		expect(next.units[1]?.target).toBeNull();
 	});
 
-	it("ignores orders into water", () => {
+	it("snaps a water destination to nearby land instead of ignoring the order", () => {
 		const state = stateOf(
 			Grunt.spawn("a", "blue", { x: 50, y: 50 }).copy({ selected: true }),
 		);
 		const next = issueMoveOrder(state, { x: 150, y: 100 }, map, RADIUS);
-		expect(next.units[0]?.target).toBeNull();
-		expect(next.units[0]?.path).toEqual([]);
+		const unit = next.units[0];
+		expect(unit?.target).not.toBeNull();
+		expect(unit?.path.length).toBeGreaterThan(0);
+		// Water ellipse center is (150, 100) r=40 — snapped goal must sit outside it.
+		const target = unit?.target;
+		expect(target).toBeDefined();
+		if (target === undefined) {
+			return;
+		}
+		expect(Math.hypot(target.x - 150, target.y - 100)).toBeGreaterThan(40);
 	});
 
 	it("paths around water instead of a straight line through it", () => {
@@ -141,6 +149,40 @@ describe("step", () => {
 		expect(next.units[0]?.position).toEqual({ x: 55, y: 20 });
 		expect(next.units[0]?.target).toBeNull();
 		expect(next.units[0]?.path).toEqual([]);
+	});
+
+	it("stamps idle/marching/fighting from post-tick positions", () => {
+		const idle = step(
+			stateOf(Grunt.spawn("a", "blue", { x: 50, y: 50 })),
+			openMap,
+			RADIUS,
+			0.1,
+		);
+		expect(idle.units[0]?.state).toBe("idle");
+
+		const marching = step(
+			stateOf(
+				Grunt.spawn("a", "blue", { x: 50, y: 50 }).copy({
+					target: { x: 200, y: 50 },
+					path: [{ x: 200, y: 50 }],
+				}),
+			),
+			openMap,
+			RADIUS,
+			0.1,
+		);
+		expect(marching.units[0]?.state).toBe("marching");
+
+		const fighting = step(
+			stateOf(
+				Grunt.spawn("a", "blue", { x: 50, y: 50 }),
+				Grunt.spawn("b", "red", { x: 60, y: 50 }),
+			),
+			openMap,
+			RADIUS,
+			0.1,
+		);
+		expect(fighting.units.find((u) => u.id === "a")?.state).toBe("fighting");
 	});
 
 	it("advances through waypoints", () => {

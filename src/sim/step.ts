@@ -13,7 +13,7 @@ import {
 	PATH_WAYPOINT_REACH,
 } from "../shared/config";
 import type { GameState } from "../shared/game-state";
-import type { TeamId, Vec2 } from "../shared/types";
+import type { DotId, TeamId, Vec2 } from "../shared/types";
 import {
 	applyTerritoryDrain,
 	collectSources,
@@ -25,6 +25,8 @@ import { tickChase } from "./chase";
 import { tickCombat, tickProjectiles } from "./combat";
 import { findPath } from "./navigation";
 import { separateUnits } from "./separation";
+import { computeSharedContext, type TickContext } from "./tick-context";
+import { resolveUnitStates } from "./unit-state";
 
 function hasSelection(state: GameState): boolean {
 	return state.units.some((unit) => unit.selected);
@@ -197,18 +199,17 @@ export function checkWinner(cities: readonly City[]): TeamId | null {
 /** Projectile id counter lives outside state for now (sim-local). */
 let nextProjectileId = 1;
 
-/** Advance one simulation tick: move, separate, combat, projectiles, deaths, wipe. */
-export function step(
+/**
+ * Stage: chase + formation march + path movement + separation.
+ * Same order/side effects as before the state-machine reshape.
+ */
+function runMovementBehaviors(
 	state: GameState,
 	map: MapDefinition,
 	radius: number,
 	dt: number,
-	formations?: FormationRegistry,
-): GameState {
-	if (state.winner !== null) {
-		return state;
-	}
-
+	formations: FormationRegistry | undefined,
+): { readonly state: GameState; readonly marchingIds: ReadonlySet<DotId> } {
 	const chasedUnits = tickChase(state.units, map, radius, formations);
 	const chased: GameState = { ...state, units: chasedUnits };
 
@@ -217,7 +218,9 @@ export function step(
 			? chased
 			: tickFormationMarches(chased, formations, map, radius, dt);
 	const marchingIds =
-		formations === undefined ? new Set<string>() : formations.marchingUnitIds();
+		formations === undefined
+			? new Set<DotId>()
+			: formations.marchingUnitIds();
 
 	const moved = marched.units.map((unit) => {
 		if (marchingIds.has(unit.id)) {
@@ -239,40 +242,118 @@ export function step(
 	const separatedFree = separateUnits(freeUnits, map, radius);
 	const separated = [...separatedFree, ...lockedUnits];
 
+	return {
+		state: { ...marched, units: separated },
+		marchingIds,
+	};
+}
+
+/**
+ * Stage: direct combat + projectile flight + remove dead.
+ * Not yet switched on `unit.state` — Fighting is stamped after the tick.
+ */
+function runCombatBehaviors(
+	state: GameState,
+	dt: number,
+): GameState {
 	const combat = tickCombat(
-		separated,
-		marched.projectiles,
+		state.units,
+		state.projectiles,
 		dt,
 		nextProjectileId,
 	);
 	nextProjectileId = combat.nextProjectileId;
 
 	const flights = tickProjectiles(combat.units, combat.projectiles, dt);
-	const afterCombat = removeDead(flights.units);
-	const captured = tickCapture(marched.cities, afterCombat, dt);
-	const settled = settleQueuesAfterCapture(
-		marched.cities,
-		captured,
-		marched.gold,
-	);
-	const produced = tickProduction(settled.cities, afterCombat, dt);
-	const sourcesForDrain = collectSources(produced.cities, produced.units);
-	const drained = applyTerritoryDrain(produced.units, sourcesForDrain, dt);
-	const living = removeDead(drained);
-	const territory = computeTerritory(
-		BOARD_WIDTH,
-		BOARD_HEIGHT,
-		collectSources(produced.cities, living),
-	);
-	const winner = checkWinner(produced.cities);
+	return {
+		...state,
+		units: removeDead(flights.units),
+		projectiles: flights.projectiles,
+	};
+}
+
+/** Stage: city capture + production queues. */
+function runCityBehaviors(state: GameState, dt: number): GameState {
+	const captured = tickCapture(state.cities, state.units, dt);
+	const settled = settleQueuesAfterCapture(state.cities, captured, state.gold);
+	const produced = tickProduction(settled.cities, state.units, dt);
+	return {
+		...state,
+		cities: produced.cities,
+		units: produced.units,
+		gold: settled.gold,
+	};
+}
+
+/**
+ * Stage: passive effects (territory HP drain today).
+ * Heal / morale regen / upkeep hook here in later steps.
+ * `_context` reserved so Steps 3–4 can gate passives without reshaping step().
+ */
+function applyPassiveEffects(
+	state: GameState,
+	dt: number,
+	_context: TickContext,
+): GameState {
+	const sourcesForDrain = collectSources(state.cities, state.units);
+	const drained = applyTerritoryDrain(state.units, sourcesForDrain, dt);
+	return {
+		...state,
+		units: removeDead(drained),
+	};
+}
+
+/** Recompute ownership field after units/cities settle for the tick. */
+function recomputeTerritoryField(state: GameState): GameState {
+	return {
+		...state,
+		territory: computeTerritory(
+			BOARD_WIDTH,
+			BOARD_HEIGHT,
+			collectSources(state.cities, state.units),
+		),
+	};
+}
+
+/**
+ * Advance one simulation tick.
+ *
+ * Stages (behavior-preserving order):
+ * 1. compute shared context once (territory + empty stubs)
+ * 2. movement behaviors (chase / formation / path / separate)
+ * 3. combat behaviors
+ * 4. city capture + production
+ * 5. passive effects (territory drain)
+ * 6. recompute territory
+ * 7. resolve Idle/Marching/Fighting on each unit (Routing unused)
+ * 8. win check
+ */
+export function step(
+	state: GameState,
+	map: MapDefinition,
+	radius: number,
+	dt: number,
+	formations?: FormationRegistry,
+): GameState {
+	if (state.winner !== null) {
+		return state;
+	}
+
+	const context = computeSharedContext(state);
+
+	const moved = runMovementBehaviors(state, map, radius, dt, formations);
+	const afterCombat = runCombatBehaviors(moved.state, dt);
+	const afterCities = runCityBehaviors(afterCombat, dt);
+	const afterPassives = applyPassiveEffects(afterCities, dt, context);
+	const withTerritory = recomputeTerritoryField(afterPassives);
+	const withStates = {
+		...withTerritory,
+		units: resolveUnitStates(withTerritory.units, moved.marchingIds),
+	};
 
 	return {
-		units: living,
-		cities: produced.cities,
-		territory,
-		projectiles: flights.projectiles,
-		gold: settled.gold,
-		winner,
+		...withStates,
+		winner: checkWinner(withStates.cities),
 	};
 }
 

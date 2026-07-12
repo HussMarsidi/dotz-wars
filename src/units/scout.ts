@@ -23,6 +23,7 @@ export class Scout extends Unit {
 			position,
 			selected: false,
 			hp: 55,
+			state: "idle",
 			target: null,
 			path: [],
 			orderKind: "move",

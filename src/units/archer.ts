@@ -23,6 +23,7 @@ export class Archer extends Unit {
 			position,
 			selected: false,
 			hp: 70,
+			state: "idle",
 			target: null,
 			path: [],
 			orderKind: "move",

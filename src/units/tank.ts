@@ -23,6 +23,7 @@ export class Tank extends Unit {
 			position,
 			selected: false,
 			hp: 180,
+			state: "idle",
 			target: null,
 			path: [],
 			orderKind: "move",
