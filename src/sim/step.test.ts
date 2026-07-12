@@ -62,6 +62,7 @@ function stateOf(...units: Unit[]): GameState {
 		territory: emptyTerritory(1, 1),
 		projectiles: [],
 		gold: { blue: 1000, red: 1000 },
+		diplomatLockout: { blue: 0, red: 0 },
 		winner: null,
 	};
 }
@@ -88,8 +89,9 @@ describe("issueMoveOrder", () => {
 		expect(unit?.path.length).toBeGreaterThan(0);
 		// Water ellipse center is (150, 100) r=40 — snapped goal must sit outside it.
 		const target = unit?.target;
+		expect(target).not.toBeNull();
 		expect(target).toBeDefined();
-		if (target === undefined) {
+		if (target === null || target === undefined) {
 			return;
 		}
 		expect(Math.hypot(target.x - 150, target.y - 100)).toBeGreaterThan(40);
@@ -183,6 +185,32 @@ describe("step", () => {
 			0.1,
 		);
 		expect(fighting.units.find((u) => u.id === "a")?.state).toBe("fighting");
+	});
+
+	it("enters routing when morale hits 0 and flees toward a friendly city", () => {
+		const city = createCity("blue-n", "blue", { x: 200, y: 50 }, "N");
+		const broken = Grunt.spawn("a", "blue", { x: 50, y: 50 }).copy({
+			morale: 0,
+			state: "routing",
+			selected: true,
+		});
+		const state: GameState = {
+			units: [broken],
+			cities: [city],
+			territory: emptyTerritory(1, 1),
+			projectiles: [],
+			gold: { blue: 1000, red: 1000 },
+			diplomatLockout: { blue: 0, red: 0 },
+			winner: null,
+		};
+		const next = step(state, openMap, RADIUS, 0.1);
+		const unit = next.units[0];
+		expect(unit?.state).toBe("routing");
+		expect(unit?.selected).toBe(false);
+		expect(unit?.target).not.toBeNull();
+		expect(unit?.path.length).toBeGreaterThan(0);
+		// Should have moved toward the city (east).
+		expect(unit?.position.x).toBeGreaterThan(50);
 	});
 
 	it("advances through waypoints", () => {

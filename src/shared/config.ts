@@ -140,7 +140,7 @@ export const UNIT_COST = {
 	scout: 50,
 	grunt: 75,
 	archer: 100,
-	mage: 150,
+	diplomat: 150,
 	tank: 200,
 } as const;
 
@@ -149,9 +149,24 @@ export const UNIT_TRAIN_TIME = {
 	scout: 2,
 	grunt: 3,
 	archer: 4,
-	mage: 6,
+	diplomat: 20,
 	tank: 8,
 } as const;
+
+/** Max living + queued diplomats per team. */
+export const DIPLOMAT_CAP = 2;
+/** Seconds before a team may train another diplomat after one dies. */
+export const DIPLOMAT_REPLACEMENT_LOCKOUT = 300;
+
+/**
+ * Morale (🔢 TBD — playtest). Drain while enemy in attack range; regen otherwise.
+ * At 0 the unit enters Routing; exits when morale regenerates above 0.
+ */
+export const UNIT_MAX_MORALE = 100;
+export const MORALE_DRAIN_PER_SEC = 25;
+export const MORALE_REGEN_PER_SEC = 15;
+/** Must regen to this before Routing ends (🔢 TBD — >0 alone exits too fast while fleeing). */
+export const MORALE_ROUTING_EXIT = 40;
 
 /** City body square side length (world units). */
 export const CITY_SIZE = 48;

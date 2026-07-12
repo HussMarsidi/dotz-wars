@@ -1,10 +1,12 @@
+import { MORALE_ROUTING_EXIT } from "../shared/config";
 import type { DotId } from "../shared/types";
 import type { Unit, UnitState } from "../units";
 import { findPriorityEnemy } from "./combat";
 
 /**
- * Derive combat/movement state from existing signals.
- * `routing` is never returned here — morale lands in Step 2.
+ * Derive combat/movement state.
+ * Morale ≤ 0 forces Routing. Stays routing until morale reaches the exit
+ * threshold (regen while fleeing would otherwise restore control instantly).
  */
 export function deriveUnitState(
 	unit: Unit,
@@ -15,7 +17,18 @@ export function deriveUnitState(
 		return unit.state;
 	}
 
-	if (findPriorityEnemy(unit, living, unit.attackRange) !== null) {
+	if (unit.morale <= 0) {
+		return "routing";
+	}
+
+	if (unit.state === "routing" && unit.morale < MORALE_ROUTING_EXIT) {
+		return "routing";
+	}
+
+	if (
+		unit.canAttack &&
+		findPriorityEnemy(unit, living, unit.attackRange) !== null
+	) {
 		return "fighting";
 	}
 
@@ -41,6 +54,10 @@ export function resolveUnitStates(
 		if (next === unit.state) {
 			return unit;
 		}
-		return unit.copy({ state: next });
+		const cleared =
+			next === "routing" && unit.selected
+				? unit.copy({ state: next, selected: false })
+				: unit.copy({ state: next });
+		return cleared;
 	});
 }

@@ -68,7 +68,7 @@ describe("computeTerritory", () => {
 		const contested = computeTerritory(
 			400,
 			400,
-			[cityAsSource(city), unitAsSource(unit)],
+			[cityAsSource(city), unitAsSource(unit)!],
 			16,
 		);
 		// Unit projection can flip or neutralize ground near the city fringe.

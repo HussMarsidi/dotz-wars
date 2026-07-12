@@ -1,3 +1,4 @@
+import { UNIT_MAX_MORALE } from "../shared/config";
 import { Unit, type UnitFields, type UnitKind } from "./unit";
 
 /** Slow, durable melee anchor. */
@@ -23,6 +24,7 @@ export class Tank extends Unit {
 			position,
 			selected: false,
 			hp: 180,
+			morale: UNIT_MAX_MORALE,
 			state: "idle",
 			target: null,
 			path: [],

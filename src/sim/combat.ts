@@ -135,6 +135,10 @@ export function tickCombat(
 			return decayCombatAnims(unit, dt);
 		}
 
+		if (!unit.canAttack) {
+			return decayCombatAnims(unit, dt).copy({ attackTimer: 0 });
+		}
+
 		const timer = Math.max(0, unit.attackTimer - dt);
 		if (timer > 0) {
 			return decayCombatAnims(unit, dt).copy({ attackTimer: timer });

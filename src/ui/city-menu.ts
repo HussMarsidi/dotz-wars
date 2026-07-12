@@ -12,7 +12,7 @@ const BUY_KINDS: readonly UnitKind[] = [
 	"scout",
 	"grunt",
 	"archer",
-	"mage",
+	"diplomat",
 	"tank",
 ];
 
@@ -24,8 +24,8 @@ function kindLabel(kind: UnitKind): string {
 			return "Grunt";
 		case "archer":
 			return "Archer";
-		case "mage":
-			return "Mage";
+		case "diplomat":
+			return "Diplomat";
 		case "tank":
 			return "Tank";
 		default: {

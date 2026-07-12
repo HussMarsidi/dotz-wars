@@ -36,8 +36,27 @@ describe("deriveUnitState", () => {
 		expect(deriveUnitState(blue, [blue, red], new Set())).toBe("fighting");
 	});
 
-	it("never returns routing (reserved for Step 2)", () => {
-		const unit = Grunt.spawn("a", "blue", { x: 0, y: 0 });
-		expect(deriveUnitState(unit, [unit], new Set())).not.toBe("routing");
+	it("returns routing when morale is 0", () => {
+		const unit = Grunt.spawn("a", "blue", { x: 0, y: 0 }).copy({ morale: 0 });
+		const red = Grunt.spawn("b", "red", { x: 20, y: 0 });
+		expect(deriveUnitState(unit, [unit, red], new Set())).toBe("routing");
+	});
+
+	it("exits routing once morale reaches the exit threshold", () => {
+		const unit = Grunt.spawn("a", "blue", { x: 0, y: 0 }).copy({
+			morale: 40,
+			state: "routing",
+		});
+		expect(deriveUnitState(unit, [unit], new Set())).toBe("idle");
+	});
+
+	it("stays routing while morale is recovering below the exit threshold", () => {
+		const unit = Grunt.spawn("a", "blue", { x: 0, y: 0 }).copy({
+			morale: 10,
+			state: "routing",
+			target: { x: 100, y: 0 },
+			path: [{ x: 100, y: 0 }],
+		});
+		expect(deriveUnitState(unit, [unit], new Set())).toBe("routing");
 	});
 });

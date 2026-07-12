@@ -31,6 +31,7 @@ function stateOf(...units: Unit[]): GameState {
 		territory: emptyTerritory(1, 1),
 		projectiles: [],
 		gold: { blue: 1000, red: 1000 },
+		diplomatLockout: { blue: 0, red: 0 },
 		winner: null,
 	};
 }

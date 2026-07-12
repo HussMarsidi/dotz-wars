@@ -8,7 +8,10 @@ import {
 	SPAWN_Y_GAP,
 	SPAWN_Y_START,
 } from "../shared/config";
-import type { GameState } from "../shared/game-state";
+import {
+	createInitialDiplomatLockout,
+	type GameState,
+} from "../shared/game-state";
 import { collectSources, computeTerritory } from "../territory";
 import { spawnUnit, type TeamId, UNIT_LINEUP, type Unit } from "../units";
 
@@ -43,6 +46,7 @@ export function createInitialState(): GameState {
 		),
 		projectiles: [],
 		gold: createInitialGold(),
+		diplomatLockout: createInitialDiplomatLockout(),
 		winner: null,
 	};
 }

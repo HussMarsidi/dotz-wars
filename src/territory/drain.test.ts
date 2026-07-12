@@ -23,12 +23,12 @@ describe("overwhelmAt", () => {
 		const deepUnit = Grunt.spawn("d", "blue", { x: 20, y: 0 });
 		const fringeUnit = Grunt.spawn("f", "blue", { x: 160, y: 0 });
 		const deep = overwhelmAt(
-			[cityAsSource(city), unitAsSource(deepUnit)],
+			[cityAsSource(city), unitAsSource(deepUnit)!],
 			deepUnit.position,
 			"blue",
 		);
 		const fringe = overwhelmAt(
-			[cityAsSource(city), unitAsSource(fringeUnit)],
+			[cityAsSource(city), unitAsSource(fringeUnit)!],
 			fringeUnit.position,
 			"blue",
 		);

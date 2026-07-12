@@ -25,7 +25,7 @@ const UNIT_LETTER: Record<UnitKind, string> = {
 	archer: "A",
 	tank: "T",
 	scout: "S",
-	mage: "M",
+	diplomat: "D",
 };
 
 export type DotView = {

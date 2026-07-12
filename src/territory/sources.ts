@@ -18,7 +18,10 @@ export function cityAsSource(city: City): InfluenceSource {
 	};
 }
 
-export function unitAsSource(unit: Unit): InfluenceSource {
+export function unitAsSource(unit: Unit): InfluenceSource | null {
+	if (!unit.projectsTerritory) {
+		return null;
+	}
 	return {
 		teamId: unit.teamId,
 		position: unit.position,
@@ -36,8 +39,12 @@ export function collectSources(
 		sources.push(cityAsSource(city));
 	}
 	for (const unit of units) {
-		if (unit.isAlive) {
-			sources.push(unitAsSource(unit));
+		if (!unit.isAlive) {
+			continue;
+		}
+		const source = unitAsSource(unit);
+		if (source !== null) {
+			sources.push(source);
 		}
 	}
 	return sources;

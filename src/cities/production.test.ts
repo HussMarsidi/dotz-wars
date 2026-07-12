@@ -30,6 +30,7 @@ function stateWithCity(
 		territory: emptyTerritory(1, 1),
 		projectiles: [],
 		gold,
+		diplomatLockout: { blue: 0, red: 0 },
 		winner: null,
 	};
 }

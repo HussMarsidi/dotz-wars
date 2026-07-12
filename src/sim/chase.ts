@@ -24,6 +24,11 @@ export function tickChase(
 		if (!unit.isAlive) {
 			return unit;
 		}
+		// Routing: flee home (see ensureRoutingFleePaths); only fight in-range.
+		// Diplomat: never auto-chases into combat.
+		if (unit.state === "routing" || !unit.canAttack) {
+			return unit;
+		}
 
 		const aggro = unit.attackRange * AGGRO_RANGE_MULTIPLIER;
 		const enemy = findPriorityEnemy(unit, living, aggro);

@@ -1,15 +1,19 @@
 import type { TeamId, Vec2 } from "../shared/types";
 import { Archer } from "./archer";
+import { Diplomat } from "./diplomat";
 import { Grunt } from "./grunt";
-import { Mage } from "./mage";
 import { Scout } from "./scout";
 import { Tank } from "./tank";
 import type { Unit, UnitKind } from "./unit";
 
 export type { TeamId } from "../shared/types";
 export { Archer } from "./archer";
+export {
+	Diplomat,
+	sendDiplomatSignal,
+	type DiplomatSignal,
+} from "./diplomat";
 export { Grunt } from "./grunt";
-export { Mage } from "./mage";
 export { Scout } from "./scout";
 export { Tank } from "./tank";
 export type {
@@ -29,7 +33,7 @@ const SPAWNERS: Record<
 	archer: Archer.spawn,
 	tank: Tank.spawn,
 	scout: Scout.spawn,
-	mage: Mage.spawn,
+	diplomat: Diplomat.spawn,
 };
 
 /** Test lineup: two of each kind (for Cmd+A same-type select). */
@@ -42,8 +46,8 @@ export const UNIT_LINEUP: readonly UnitKind[] = [
 	"tank",
 	"scout",
 	"scout",
-	"mage",
-	"mage",
+	"diplomat",
+	"diplomat",
 ];
 
 export function spawnUnit(

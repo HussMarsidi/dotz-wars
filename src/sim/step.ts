@@ -23,7 +23,10 @@ import type { OrderKind, Unit } from "../units";
 import { checkCityWinner, tickCapture } from "./capture";
 import { tickChase } from "./chase";
 import { tickCombat, tickProjectiles } from "./combat";
+import { tickDiplomatLockout } from "./diplomat-lockout";
+import { tickMorale } from "./morale";
 import { findPath } from "./navigation";
+import { ensureRoutingFleePaths } from "./routing";
 import { separateUnits } from "./separation";
 import { computeSharedContext, type TickContext } from "./tick-context";
 import { resolveUnitStates } from "./unit-state";
@@ -64,7 +67,7 @@ export function issueMoveOrder(
 	return {
 		...state,
 		units: state.units.map((unit) => {
-			if (!unit.selected) {
+			if (!unit.selected || unit.state === "routing") {
 				return unit;
 			}
 			const path = findPath(map, unit.position, destination, radius);
@@ -210,7 +213,14 @@ function runMovementBehaviors(
 	dt: number,
 	formations: FormationRegistry | undefined,
 ): { readonly state: GameState; readonly marchingIds: ReadonlySet<DotId> } {
-	const chasedUnits = tickChase(state.units, map, radius, formations);
+	const routedUnits = ensureRoutingFleePaths(
+		state.units,
+		state.cities,
+		map,
+		radius,
+		formations,
+	);
+	const chasedUnits = tickChase(routedUnits, map, radius, formations);
 	const chased: GameState = { ...state, units: chasedUnits };
 
 	const marched =
@@ -286,8 +296,8 @@ function runCityBehaviors(state: GameState, dt: number): GameState {
 }
 
 /**
- * Stage: passive effects (territory HP drain today).
- * Heal / morale regen / upkeep hook here in later steps.
+ * Stage: passive effects — territory HP drain + morale drain/regen.
+ * Heal / upkeep hook here in later steps.
  * `_context` reserved so Steps 3–4 can gate passives without reshaping step().
  */
 function applyPassiveEffects(
@@ -297,9 +307,10 @@ function applyPassiveEffects(
 ): GameState {
 	const sourcesForDrain = collectSources(state.cities, state.units);
 	const drained = applyTerritoryDrain(state.units, sourcesForDrain, dt);
+	const afterMorale = tickMorale(removeDead(drained), dt);
 	return {
 		...state,
-		units: removeDead(drained),
+		units: afterMorale,
 	};
 }
 
@@ -318,15 +329,16 @@ function recomputeTerritoryField(state: GameState): GameState {
 /**
  * Advance one simulation tick.
  *
- * Stages (behavior-preserving order):
+ * Stages:
  * 1. compute shared context once (territory + empty stubs)
- * 2. movement behaviors (chase / formation / path / separate)
+ * 2. movement (routing flee → chase → formation → path → separate)
  * 3. combat behaviors
  * 4. city capture + production
- * 5. passive effects (territory drain)
- * 6. recompute territory
- * 7. resolve Idle/Marching/Fighting on each unit (Routing unused)
- * 8. win check
+ * 5. passive effects (territory drain + morale)
+ * 6. diplomat replacement lockout
+ * 7. recompute territory
+ * 8. resolve Idle/Marching/Fighting/Routing
+ * 9. win check
  */
 export function step(
 	state: GameState,
@@ -340,14 +352,22 @@ export function step(
 	}
 
 	const context = computeSharedContext(state);
+	const unitsBeforeCombat = state.units;
 
 	const moved = runMovementBehaviors(state, map, radius, dt, formations);
 	const afterCombat = runCombatBehaviors(moved.state, dt);
 	const afterCities = runCityBehaviors(afterCombat, dt);
 	const afterPassives = applyPassiveEffects(afterCities, dt, context);
+	const diplomatLockout = tickDiplomatLockout(
+		unitsBeforeCombat,
+		afterPassives.units,
+		state.diplomatLockout,
+		dt,
+	);
 	const withTerritory = recomputeTerritoryField(afterPassives);
 	const withStates = {
 		...withTerritory,
+		diplomatLockout,
 		units: resolveUnitStates(withTerritory.units, moved.marchingIds),
 	};
 
@@ -373,6 +393,7 @@ export function interpolateState(
 		cities: current.cities,
 		territory: current.territory,
 		gold: current.gold,
+		diplomatLockout: current.diplomatLockout,
 		units: current.units.map((unit) => {
 			const prev = prevById.get(unit.id);
 			if (prev === undefined) {

@@ -2,6 +2,7 @@ import { partialRefundAmount, refund, spend, type TeamGold } from "../money";
 import {
 	CITY_PRODUCTION_QUEUE_CAP,
 	CITY_SIZE,
+	DIPLOMAT_CAP,
 	LOCAL_TEAM,
 	UNIT_COST,
 	UNIT_TRAIN_TIME,
@@ -61,6 +62,26 @@ function findCity(cities: readonly City[], cityId: CityId): City | undefined {
 	return cities.find((city) => city.id === cityId);
 }
 
+function diplomatCountForTeam(state: GameState, teamId: TeamId): number {
+	let count = 0;
+	for (const unit of state.units) {
+		if (unit.isAlive && unit.teamId === teamId && unit.kind === "diplomat") {
+			count += 1;
+		}
+	}
+	for (const city of state.cities) {
+		if (city.teamId !== teamId) {
+			continue;
+		}
+		for (const order of city.queue) {
+			if (order.kind === "diplomat") {
+				count += 1;
+			}
+		}
+	}
+	return count;
+}
+
 /**
  * Queue a unit at an owned local-team city. Deducts gold up front.
  * Returns null if unaffordable, queue full, wrong owner, or unknown city/kind.
@@ -79,6 +100,15 @@ export function orderUnit(
 	}
 	if (city.queue.length >= CITY_PRODUCTION_QUEUE_CAP) {
 		return null;
+	}
+
+	if (kind === "diplomat") {
+		if (state.diplomatLockout[LOCAL_TEAM] > 0) {
+			return null;
+		}
+		if (diplomatCountForTeam(state, LOCAL_TEAM) >= DIPLOMAT_CAP) {
+			return null;
+		}
 	}
 
 	const cost = UNIT_COST[kind];
